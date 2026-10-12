@@ -353,7 +353,9 @@ function fmtTime(ts){ const d = new Date(ts); let h = d.getHours(); const m = pa
 function fmtClock(hhmm, addMin){ const [h, m] = hhmm.split(':').map(Number); const d = new Date(); d.setHours(h, m + addMin, 0, 0); return fmtTime(d.getTime()); }
 function fmtDur(ms){ const m = Math.max(0, Math.round(ms/60000)); const h = Math.floor(m/60); return h ? `${h}h ${pad(m%60)}m` : `${m}m`; }
 function fmtDate(ts){ return new Date(ts).toLocaleDateString(undefined, {weekday:'short', day:'numeric', month:'short'}); }
-function barIG(id){ const v = S.venues[id]; return ((v && v.ig) || '').replace(/^@/, ''); }
+function barIG(id){ const v = S.venues[id]; return ((v && v.ig) || byId[id].ig || '').replace(/^@/, ''); }
+function igHref(id){ const ig = barIG(id); return ig ? `https://www.instagram.com/${encodeURIComponent(ig)}/` : `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(byId[id].name + ' Queenstown')}`; }
+function igBtn(id, cls){ const ig = barIG(id); return `<a class="btn ${cls || 'sm'}" href="${igHref(id)}" target="_blank" rel="noopener">📸 Follow${ig ? ' @' + esc(ig) : ' on Insta'}</a>`; }
 function allDeals(){ return [...S.deals, ...SEED_DEALS]; }
 function dealsFor(id){ return allDeals().filter(d => d.bar === id); }
 
@@ -741,7 +743,7 @@ function closeSheet(){ $('#sheetHost').innerHTML = ''; }
 function openBar(id){
   const b = byId[id]; const deals = dealsFor(id); const inPlan = S.plan.ids.includes(id); const ig = barIG(id);
   const cur = currentStop();
-  openSheet(`<div class="row nowrap"><div class="grow"><h3>${esc(b.name)}</h3>${b.star ? `<div><span class="badge star">★ ${esc(b.star)}</span></div>` : ''}<p class="muted small">${esc(b.area)} · ${esc(b.vibe)}</p></div>${ig ? `<a class="btn sm" href="https://www.instagram.com/${esc(ig)}/" target="_blank" rel="noopener">@${esc(ig)}</a>` : ''}</div>
+  openSheet(`<div class="row nowrap"><div class="grow"><h3>${esc(b.name)}</h3>${b.star ? `<div><span class="badge star">★ ${esc(b.star)}</span></div>` : ''}<p class="muted small">${esc(b.area)} · ${esc(b.vibe)}</p></div>${igBtn(id)}</div>
     <div class="chips">${b.tags.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
     ${deals.length ? `<div class="stack"><span class="eyebrow">Slither deals here</span>${deals.map(d => `<div class="item"><div class="grow"><div class="n">${esc(d.title)}</div><div class="muted small">${esc(d.when || '')}</div></div>${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div>`).join('')}</div>` : `<p class="muted small">No deals posted yet.</p>`}
     <div class="row">
@@ -872,7 +874,7 @@ function renderDeals(){
         <div class="row nowrap"><div class="grow"><div class="eyebrow">${esc(b.name)} · ${esc(b.area)}</div><h3>${esc(d.title)}</h3></div><div class="stack" style="gap:4px;align-items:flex-end">${b.star ? `<span class="badge star">★ ${esc(b.star)}</span>` : ''}${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div></div>
         <p class="small">${esc(d.detail)}</p>
         <div class="row"><span class="badge cat">${esc(d.cat)}</span><span class="muted small">${esc(d.when || '')}</span></div>
-        <div class="row"><button class="btn sm primary" data-show-deal="${d.id}">Show at the bar</button><button class="btn sm" data-act="${inPlan ? 'remove' : 'add'}" data-id="${d.bar}">${inPlan ? 'On the Slither ✓' : '+ Add bar to Slither'}</button>${d.custom ? `<button class="btn sm ghost" data-del-deal="${d.id}">Delete</button>` : ''}</div>
+        <div class="row"><button class="btn sm primary" data-show-deal="${d.id}">Show at the bar</button>${igBtn(d.bar)}<button class="btn sm" data-act="${inPlan ? 'remove' : 'add'}" data-id="${d.bar}">${inPlan ? 'On the Slither ✓' : '+ Add bar to Slither'}</button>${d.custom ? `<button class="btn sm ghost" data-del-deal="${d.id}">Delete</button>` : ''}</div>
       </div>`; }).join('') || '<div class="empty">No deals in that category yet.</div>'}</div>
     <div class="card"><h3>Run a bar in Queenstown?</h3><p class="small muted">Claim your venue, set your Instagram handle so Slither photos tag you, and post a deal that brings crews through the door.</p>
       <button class="btn teal block" id="claimBtn">Claim your bar and post a deal</button>
