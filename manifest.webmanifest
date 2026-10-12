@@ -1,0 +1,16 @@
+{
+  "name": "Slither",
+  "short_name": "Slither",
+  "description": "Plan a snake-like night out through Queenstown, send it to the crew, lock your snake on the board.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f1f",
+  "theme_color": "#0b0f1f",
+  "icons": [
+    { "src": "/assets/icon/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icon/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/assets/icon/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/assets/icon/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
