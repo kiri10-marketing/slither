@@ -80,6 +80,7 @@ label.chk input{width:18px;height:18px;margin:2px 0 0;flex:none;accent-color:var
 .badge.live{color:var(--good);border-color:var(--good)}
 .badge.cat{color:var(--teal);border-color:var(--teal)}
 .badge.star{color:#ffd84d;border-color:#ffd84d;background:rgba(255,216,77,.1)}
+.card.starred{border-color:rgba(255,216,77,.55)}
 .star{fill:#ffd84d;stroke:#7a5a00;stroke-width:.8;pointer-events:none}
 .list{display:flex;flex-direction:column;gap:8px}
 .item{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
@@ -320,6 +321,9 @@ const TOWN = (() => {
 
 /* Example deals. All are placeholders until a venue claims its bar. Kept inside NZ responsible-promotion rules: no free or heavily discounted alcohol. */
 const SEED_DEALS = [
+  {id:'s1', bar:'barmuda', title:'Half-price shisha for the crew', detail:'Show your Slither and the table shares one at half price.', cat:'Experience', when:'Any night, 8–11pm', example:true},
+  {id:'s2', bar:'bardeaux', title:'Cheese board on the house', detail:'Crews of 4+ on a Slither get a board for the table. Just ask.', cat:'Food', when:'Sun–Thu', example:true},
+  {id:'s3', bar:'lucky-lukes', title:'Slither guest list, no cover', detail:'Show the app at the door and walk straight in.', cat:'Entry', when:'Fri–Sat after 10pm', example:true},
   {id:'d1', bar:'winnies', title:'Free garlic bread with any pizza', detail:'Show your Slither at the counter. Dine-in only.', cat:'Food', when:'6–9pm daily', example:true},
   {id:'d2', bar:'zephyr', title:'Crew skips the line', detail:'Groups of 4+ on a Slither walk straight in before 11pm.', cat:'Entry', when:'Fri–Sat, 9–11pm', example:true},
   {id:'d3', bar:'1876', title:'Free pool, first hour', detail:'The table is on us for Slither crews. Ask at the bar.', cat:'Experience', when:'6–7pm daily', example:true},
@@ -861,11 +865,11 @@ function renderLive(){
 }
 function renderDeals(){
   const el = $('#tab-deals'); const f = S.dealFilter;
-  const deals = allDeals().filter(d => f === 'All' || d.cat === f);
+  const deals = allDeals().filter(d => f === 'All' || d.cat === f).sort((a, b) => (byId[b.bar].star ? 1 : 0) - (byId[a.bar].star ? 1 : 0));
   el.innerHTML = `<div class="hero"><h2>Slither Deals</h2><p class="muted">Bars put something on the table to pull your crew their way. Show the deal on your phone at the bar.</p></div>
     <div class="chips">${['All', ...DEAL_CATS].map(c => `<button class="chip${f === c ? ' on' : ''}" data-deal-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
-    <div class="list">${deals.map(d => { const b = byId[d.bar]; const inPlan = S.plan.ids.includes(d.bar); return `<div class="card">
-        <div class="row nowrap"><div class="grow"><div class="eyebrow">${esc(b.name)}${b.star ? ' ★' : ''} · ${esc(b.area)}</div><h3>${esc(d.title)}</h3></div>${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div>
+    <div class="list">${deals.map(d => { const b = byId[d.bar]; const inPlan = S.plan.ids.includes(d.bar); return `<div class="card${b.star ? ' starred' : ''}">
+        <div class="row nowrap"><div class="grow"><div class="eyebrow">${esc(b.name)} · ${esc(b.area)}</div><h3>${esc(d.title)}</h3></div><div class="stack" style="gap:4px;align-items:flex-end">${b.star ? `<span class="badge star">★ ${esc(b.star)}</span>` : ''}${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div></div>
         <p class="small">${esc(d.detail)}</p>
         <div class="row"><span class="badge cat">${esc(d.cat)}</span><span class="muted small">${esc(d.when || '')}</span></div>
         <div class="row"><button class="btn sm primary" data-show-deal="${d.id}">Show at the bar</button><button class="btn sm" data-act="${inPlan ? 'remove' : 'add'}" data-id="${d.bar}">${inPlan ? 'On the Slither ✓' : '+ Add bar to Slither'}</button>${d.custom ? `<button class="btn sm ghost" data-del-deal="${d.id}">Delete</button>` : ''}</div>
