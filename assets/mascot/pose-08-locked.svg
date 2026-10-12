@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 266 280" width="200" height="200" role="img" aria-label="Slither mascot, locked">
+<style>.sk{fill:none;stroke:url(#g);stroke-width:22;stroke-linecap:round;stroke-linejoin:round}
+.sk2{fill:none;stroke:url(#scales);stroke-width:22;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.belly{fill:none;stroke:#d9f5a6;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+.head{fill:#7bd24a;stroke:#2a9d4f;stroke-width:3}
+.snout{fill:#9be36a}
+.eye{fill:#fff}.iris{fill:#ffd84d}.pupil{fill:#111}.glint{fill:#fff}
+.brow{fill:none;stroke:#1f6b36;stroke-width:4;stroke-linecap:round}
+.mouth{fill:#5a1430;stroke:#1f6b36;stroke-width:3;stroke-linejoin:round}
+.lip{fill:none;stroke:#1f6b36;stroke-width:3.5;stroke-linecap:round}
+.fang{fill:#fff;stroke:#1f6b36;stroke-width:1.5;stroke-linejoin:round}
+.tongue{fill:#ff3d6e;stroke:#c2184a;stroke-width:1.5;stroke-linejoin:round}
+.blush{fill:#ff7a59;opacity:.45}</style>
+<defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a9d4f"/><stop offset=".5" stop-color="#7bd24a"/><stop offset="1" stop-color="#3cae5c"/></linearGradient>
+      <pattern id="scales" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(45)"><path d="M.5,.5 h8 v8 h-8 z" fill="rgba(0,0,0,.18)" stroke="rgba(255,255,255,.22)" stroke-width=".8"/></pattern>
+    </defs>
+<g transform="translate(0,-20)"><path class="sk" d="M80,245 C140,250 160,222 150,186 C142,158 108,150 116,120 C122,96 152,98 164,108"/>
+      <path class="sk2" d="M80,245 C140,250 160,222 150,186 C142,158 108,150 116,120 C122,96 152,98 164,108"/>
+      <path class="belly" d="M82,253 C144,258 166,224 158,186"/>
+      <g transform="translate(192,78)">
+        <path d="M-14,0 v-12 a14,14 0 0 1 28,0 v12" fill="none" stroke="#ffd84d" stroke-width="5" stroke-linecap="round"/>
+        <rect x="-22" y="0" width="44" height="34" rx="7" fill="#ffd84d"/>
+        <circle cx="0" cy="15" r="4" fill="#2a0f06"/><path d="M0,15 v8" stroke="#2a0f06" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(74,236) rotate(8)">
+        <ellipse class="head" cx="0" cy="0" rx="42" ry="36"/>
+        <ellipse class="snout" cx="0" cy="16" rx="24" ry="13"/>
+        <ellipse class="eye" cx="-15" cy="-8" rx="13" ry="14"/><ellipse class="eye" cx="15" cy="-8" rx="13" ry="14"/>
+        <circle class="iris" cx="-13" cy="-6" r="8"/><circle class="iris" cx="17" cy="-6" r="8"/>
+        <ellipse class="pupil" cx="-12" cy="-6" rx="2.6" ry="6.5"/><ellipse class="pupil" cx="18" cy="-6" rx="2.6" ry="6.5"/>
+        <circle class="glint" cx="-9" cy="-10" r="2.2"/><circle class="glint" cx="21" cy="-10" r="2.2"/>
+        <!-- scheming: brows angled down toward the middle, lids cut the top -->
+        <path d="M-28,-24 l24,10 v6 h-26 z M28,-24 l-24,10 v6 h26 z" fill="#7bd24a"/>
+        <path class="brow" d="M-28,-24 l24,10 M28,-24 l-24,10"/>
+        <!-- ear-to-ear grin with two fangs -->
+        <path class="mouth" d="M-28,10 Q0,36 28,10 Q0,18 -28,10 z"/>
+        <path class="fang" d="M-18,12 l3,9 l4,-8 z"/><path class="fang" d="M11,12 l4,8 l3,-9 z"/>
+        <ellipse class="blush" cx="-33" cy="8" rx="7" ry="4"/><ellipse class="blush" cx="33" cy="8" rx="7" ry="4"/>
+      </g></g>
+</svg>

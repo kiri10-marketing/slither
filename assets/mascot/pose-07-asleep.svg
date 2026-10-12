@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 266 280" width="200" height="200" role="img" aria-label="Slither mascot, asleep">
+<style>.sk{fill:none;stroke:url(#g);stroke-width:22;stroke-linecap:round;stroke-linejoin:round}
+.sk2{fill:none;stroke:url(#scales);stroke-width:22;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.belly{fill:none;stroke:#d9f5a6;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+.head{fill:#7bd24a;stroke:#2a9d4f;stroke-width:3}
+.snout{fill:#9be36a}
+.eye{fill:#fff}.iris{fill:#ffd84d}.pupil{fill:#111}.glint{fill:#fff}
+.brow{fill:none;stroke:#1f6b36;stroke-width:4;stroke-linecap:round}
+.mouth{fill:#5a1430;stroke:#1f6b36;stroke-width:3;stroke-linejoin:round}
+.lip{fill:none;stroke:#1f6b36;stroke-width:3.5;stroke-linecap:round}
+.fang{fill:#fff;stroke:#1f6b36;stroke-width:1.5;stroke-linejoin:round}
+.tongue{fill:#ff3d6e;stroke:#c2184a;stroke-width:1.5;stroke-linejoin:round}
+.blush{fill:#ff7a59;opacity:.45}</style>
+<defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a9d4f"/><stop offset=".5" stop-color="#7bd24a"/><stop offset="1" stop-color="#3cae5c"/></linearGradient>
+      <pattern id="scales" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(45)"><path d="M.5,.5 h8 v8 h-8 z" fill="rgba(0,0,0,.18)" stroke="rgba(255,255,255,.22)" stroke-width=".8"/></pattern>
+    </defs>
+<g transform="translate(0,-20)"><path class="sk" d="M236,222 C196,232 176,202 146,207 C116,212 100,228 80,222"/>
+      <path class="sk2" d="M236,222 C196,232 176,202 146,207 C116,212 100,228 80,222"/>
+      <path class="belly" d="M232,230 C196,240 176,210 146,215"/>
+      <g transform="translate(66,208) rotate(-18)">
+        <ellipse class="head" cx="0" cy="0" rx="42" ry="36"/>
+        <ellipse class="snout" cx="0" cy="16" rx="24" ry="13"/>
+        <!-- closed happy eyes -->
+        <path class="lip" d="M-27,-8 q12,8 24,0 M3,-8 q12,8 24,0"/>
+        <path class="brow" d="M-28,-22 q12,-4 24,-2 M4,-24 q12,-2 24,2"/>
+        <!-- open snoring mouth, lopsided -->
+        <path class="mouth" d="M-10,12 Q4,34 22,14 Q6,20 -10,12 z"/>
+        <path class="fang" d="M14,14 l3,8 l4,-7 z"/>
+        <!-- drool -->
+        <path d="M-10,16 q-4,10 -2,18 q4,-4 2,-18 z" fill="#9fe8ff" opacity=".9"/>
+        <ellipse class="blush" cx="-32" cy="8" rx="7" ry="4"/><ellipse class="blush" cx="32" cy="8" rx="7" ry="4"/>
+      </g>
+      <text class="zz" font-family="Bricolage Grotesque,sans-serif" font-weight="800" fill="#36d6c3" font-size="20" x="96" y="140">z</text>
+      <text class="zz" font-family="Bricolage Grotesque,sans-serif" font-weight="800" fill="#36d6c3" font-size="28" x="118" y="110">z</text>
+      <text class="zz" font-family="Bricolage Grotesque,sans-serif" font-weight="800" fill="#36d6c3" font-size="38" x="148" y="76">z</text></g>
+</svg>

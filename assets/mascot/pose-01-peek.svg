@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 266 280" width="200" height="200" role="img" aria-label="Slither mascot, peek">
+<style>.sk{fill:none;stroke:url(#g);stroke-width:22;stroke-linecap:round;stroke-linejoin:round}
+.sk2{fill:none;stroke:url(#scales);stroke-width:22;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.belly{fill:none;stroke:#d9f5a6;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+.head{fill:#7bd24a;stroke:#2a9d4f;stroke-width:3}
+.snout{fill:#9be36a}
+.eye{fill:#fff}.iris{fill:#ffd84d}.pupil{fill:#111}.glint{fill:#fff}
+.brow{fill:none;stroke:#1f6b36;stroke-width:4;stroke-linecap:round}
+.mouth{fill:#5a1430;stroke:#1f6b36;stroke-width:3;stroke-linejoin:round}
+.lip{fill:none;stroke:#1f6b36;stroke-width:3.5;stroke-linecap:round}
+.fang{fill:#fff;stroke:#1f6b36;stroke-width:1.5;stroke-linejoin:round}
+.tongue{fill:#ff3d6e;stroke:#c2184a;stroke-width:1.5;stroke-linejoin:round}
+.blush{fill:#ff7a59;opacity:.45}</style>
+<defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a9d4f"/><stop offset=".5" stop-color="#7bd24a"/><stop offset="1" stop-color="#3cae5c"/></linearGradient>
+      <pattern id="scales" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(45)"><path d="M.5,.5 h8 v8 h-8 z" fill="rgba(0,0,0,.18)" stroke="rgba(255,255,255,.22)" stroke-width=".8"/></pattern>
+    </defs>
+<g transform="translate(0,-20)"><path class="sk" d="M133,300 C133,255 118,235 133,205"/>
+      <path class="sk2" d="M133,300 C133,255 118,235 133,205"/>
+      <path class="belly" d="M140,300 C140,258 128,240 140,212"/>
+      <g transform="translate(133,172) rotate(-8)">
+        <ellipse class="head" cx="0" cy="0" rx="42" ry="36"/>
+        <ellipse class="snout" cx="0" cy="16" rx="24" ry="13"/>
+        <!-- eyes: huge, wide, caught -->
+        <ellipse class="eye" cx="-15" cy="-8" rx="13" ry="14"/><ellipse class="eye" cx="15" cy="-8" rx="13" ry="14"/>
+        <circle class="iris" cx="-13" cy="-7" r="8"/><circle class="iris" cx="17" cy="-7" r="8"/>
+        <ellipse class="pupil" cx="-12" cy="-7" rx="2.6" ry="6.5"/><ellipse class="pupil" cx="18" cy="-7" rx="2.6" ry="6.5"/>
+        <circle class="glint" cx="-9" cy="-11" r="2.4"/><circle class="glint" cx="21" cy="-11" r="2.4"/>
+        <!-- one brow up -->
+        <path class="brow" d="M-26,-26 q10,-8 20,-4"/><path class="brow" d="M6,-22 q10,-2 20,2"/>
+        <!-- wide smirk, lifted on the right -->
+        <path class="mouth" d="M-20,14 Q0,30 24,10 Q6,20 -20,14 z"/>
+        <path class="fang" d="M14,13 l3,8 l4,-7 z"/>
+        <path class="tongue" d="M-14,16 q-6,8 -2,14 q4,-2 6,-6 q2,4 6,5 q2,-8 -4,-13 z"/>
+        <ellipse class="blush" cx="-32" cy="8" rx="7" ry="4"/><ellipse class="blush" cx="32" cy="8" rx="7" ry="4"/>
+      </g></g>
+</svg>
