@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Slither: plan a snake-like night out through Queenstown, send it to the crew on WhatsApp, track the night and lock your snake on the board.">
+<meta name="theme-color" content="#0b0f1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Slither">
+<style>:root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Slither</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Rubik:wght@400;500;600&display=swap">
+<style>
+/* Layout: one-screen phone app. Fixed wordmark header, five-tab bar, each tab scrolls on its own.
+   The hand-drawn Queenstown CBD map is the hero; the snake route is the brand. Dark-only by design (it's a night-out app). */
+:root{
+  --bg:#0b0f1f; --bg2:#111631; --surface:#182043; --surface2:#1f2a55; --line:#2a3566;
+  --fg:#f5f0e4; --muted:#9ea8cf; --accent:#ff7a59; --accent-ink:#2a0f06; --teal:#36d6c3;
+  --lake:#0f2f44; --lake2:#0c2538; --land:#161c38; --street:#2b3769; --street-ink:#6c79b3; --park:#1a3a38;
+  --good:#6fdc8c; --warn:#ffcf5c; --danger:#ff6b6b;
+  --display:'Bricolage Grotesque','Avenir Next Condensed','Arial Narrow',sans-serif;
+  --body:'Rubik',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+#app{height:100%;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--bg);flex:none}
+.wordmark{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.02em;display:flex;align-items:center;gap:6px;line-height:1}
+.wordmark em{font-style:normal;color:var(--teal)}
+.pill{margin-left:auto;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.pill.live{color:var(--good);border-color:var(--good)}
+.pill.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:6px;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+main{flex:1;overflow:auto;min-height:0;-webkit-overflow-scrolling:touch}
+.tab{padding:14px 16px 28px;display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto;width:100%}
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--bg2);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar button{background:none;border:0;color:var(--muted);font:inherit;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;cursor:pointer}
+.tabbar button .ico{font-size:20px;line-height:1}
+.tabbar button.on{color:var(--accent)}
+.tabbar button:focus-visible{outline:2px solid var(--teal)}
+h2{font-family:var(--display);font-size:22px;font-weight:800;margin:0;text-wrap:balance;line-height:1.15}
+h3{font-family:var(--display);font-size:17px;font-weight:700;margin:0;line-height:1.2}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tiny{font-size:11.5px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.hot{border-color:var(--accent)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row.nowrap{flex-wrap:nowrap}
+.grow{flex:1;min-width:0}
+.stack{display:flex;flex-direction:column;gap:8px}
+.btn{font:inherit;font-weight:600;font-size:14px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);border-radius:12px;padding:10px 14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;line-height:1.2;min-height:42px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#042523}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;min-height:32px;font-size:13px;border-radius:9px}
+.btn.icon{padding:0;width:32px;min-height:32px;font-size:15px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);font-weight:500;min-width:0}
+label.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--fg)}
+label.chk input{width:18px;height:18px;margin:2px 0 0;flex:none;accent-color:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:var(--bg2);color:var(--muted);border-radius:999px;padding:5px 11px;cursor:pointer}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#042523}
+.badge{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:2px 6px;background:var(--bg2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.badge.ex{color:var(--warn);border-color:var(--warn)}
+.badge.live{color:var(--good);border-color:var(--good)}
+.badge.cat{color:var(--teal);border-color:var(--teal)}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.item .n{font-weight:600}
+.num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:800;font-family:var(--display);display:flex;align-items:center;justify-content:center;font-size:14px}
+.num.done{background:var(--good);color:#06240f}
+.num.now{background:var(--teal);color:#042523;box-shadow:0 0 0 4px rgba(54,214,195,.25)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:11px;color:var(--muted)}
+.mapwrap{position:relative;border-radius:16px;overflow:hidden;background:var(--lake2);border:1px solid var(--line);touch-action:none;user-select:none;-webkit-user-select:none}
+.mapwrap svg{display:block;width:100%;height:auto;max-width:100%}
+.mapwrap .zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px}
+.mapwrap .legend{position:absolute;left:8px;bottom:8px;font-size:10.5px;color:var(--muted);background:rgba(11,15,31,.75);padding:3px 7px;border-radius:6px}
+.pin{cursor:pointer}
+.pin circle.dot{fill:var(--surface2);stroke:var(--teal);stroke-width:1.6}
+.pin.planned circle.dot{fill:var(--accent);stroke:var(--accent)}
+.pin.done circle.dot{fill:var(--good);stroke:var(--good)}
+.pin.now circle.dot{fill:var(--teal);stroke:var(--fg);stroke-width:2}
+.pin text{fill:var(--fg);font-family:var(--body);font-size:9px;font-weight:500;paint-order:stroke;stroke:var(--land);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+.pin text.num{fill:var(--accent-ink);font-weight:800;font-size:9px;stroke:none;text-anchor:middle;pointer-events:none}
+.pin.done text.num{fill:#06240f}
+.pin.now text.num{fill:#042523}
+.rc{stroke:#0d1130;stroke-linecap:round}
+.rf{stroke:#303a73;stroke-linecap:round}
+.rm{stroke:rgba(255,255,255,.16);stroke-width:.8;stroke-dasharray:5 6}
+.shore{fill:none;stroke:#1b4d68;stroke-width:12;opacity:.55;stroke-linejoin:round}
+.wave{fill:none;stroke:#2a6a8a;stroke-width:1;opacity:.5}
+.stl{fill:var(--street-ink);font-size:8.5px;font-family:var(--body);text-anchor:middle;letter-spacing:.04em;pointer-events:none}
+.wl{fill:#3f7f9a;font-size:11px;font-family:var(--display);font-weight:700;letter-spacing:.14em;text-transform:uppercase;pointer-events:none}
+.pk{fill:var(--park)}
+.sk-outline{fill:none;stroke:#174d2a;stroke-width:14;stroke-linecap:round;stroke-linejoin:round}
+.sk-fill{fill:none;stroke:url(#snakeGrad);stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+.sk-scales{fill:none;stroke:url(#scales);stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+.sk-spine{fill:none;stroke:#0f3d1f;stroke-width:2.4;stroke-dasharray:4 7;stroke-linecap:round;opacity:.75}
+.sk-tail{fill:#2f9a4f;stroke:#174d2a;stroke-width:1.2}
+.snakeg{animation:wiggle 1.3s ease-in-out infinite alternate}
+@keyframes wiggle{0%{transform:translate(-2.2px,1.3px)}100%{transform:translate(2.2px,-1.3px)}}
+.sk-spine{animation:crawl 1.1s linear infinite}
+@keyframes crawl{to{stroke-dashoffset:-11}}
+.head{transform-box:fill-box;transform-origin:12% 50%;animation:bob 1.7s ease-in-out infinite alternate}
+@keyframes bob{0%{transform:rotate(-12deg)}100%{transform:rotate(12deg)}}
+.tongue{transform-box:fill-box;transform-origin:0 50%;animation:flick 2.6s ease-in-out infinite}
+@keyframes flick{0%,62%{transform:scaleX(0)}70%,86%{transform:scaleX(1)}94%,100%{transform:scaleX(0)}}
+.dancing .snakeg{animation-name:groove;animation-duration:var(--beat,.54s)}
+@keyframes groove{0%{transform:translate(-3.5px,2px)}100%{transform:translate(3.5px,-2px)}}
+.dancing .head{animation-name:headbang;animation-duration:var(--beat,.54s)}
+@keyframes headbang{0%{transform:rotate(-18deg) scale(1)}50%{transform:rotate(0) scale(1.1)}100%{transform:rotate(18deg) scale(1)}}
+.dancing .sk-spine{animation-duration:calc(var(--beat,.54s)/2)}
+.pop{transform-box:fill-box;transform-origin:center}
+.pop.wink{animation:pop .9s ease-out 1}
+@keyframes pop{0%{transform:scale(1) rotate(0)}30%{transform:scale(1.45) rotate(-12deg)}60%{transform:scale(1.25) rotate(10deg)}100%{transform:scale(1) rotate(0)}}
+.eye{transform-box:fill-box;transform-origin:center}
+.pop.wink .eye-r{animation:wink .9s ease-in-out 1}
+@keyframes wink{0%,22%{transform:scaleY(1)}35%,65%{transform:scaleY(.08)}80%,100%{transform:scaleY(1)}}
+.pill.music{cursor:pointer;font:inherit;font-size:15px;padding:4px 9px;line-height:1.2}
+.pill.music.on{border-color:var(--teal);box-shadow:0 0 0 3px rgba(54,214,195,.18)}
+.pill+.pill{margin-left:0}
+@media (prefers-reduced-motion:reduce){.snakeg,.sk-spine,.head,.tongue,.pop,.eye{animation:none!important}}
+.snake-plan{fill:none;stroke:#7bd24a;stroke-width:3;stroke-dasharray:5 7;opacity:.6;stroke-linecap:round}
+.rank{flex:none;width:26px;font-family:var(--display);font-weight:800;color:var(--muted);font-size:15px;text-align:center}
+.score{font-family:var(--display);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;color:var(--teal)}
+.item.mine{border-color:var(--teal);background:rgba(54,214,195,.08)}
+.trail{fill:none;stroke:var(--teal);stroke-width:2.5;opacity:.85;stroke-linecap:round;stroke-linejoin:round}
+.you{fill:var(--teal);stroke:var(--fg);stroke-width:2}
+.you-ring{fill:none;stroke:var(--teal);stroke-width:2;opacity:.5;animation:ring 1.6s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes ring{0%{transform:scale(.6);opacity:.7}100%{transform:scale(2.2);opacity:0}}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.photos.wide{grid-template-columns:repeat(2,1fr)}
+.ph{position:relative;aspect-ratio:1;max-width:100%;border-radius:10px;overflow:hidden;background:var(--bg2)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph button{position:absolute;right:4px;bottom:4px}
+.sheet-bg{position:fixed;inset:0;background:rgba(5,8,20,.6);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:0}
+.sheet{background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;width:100%;max-width:640px;max-height:88%;overflow:auto;padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.sheet .handle{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 2px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);font-weight:600;font-size:14px;padding:10px 16px;border-radius:999px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:90vw;text-align:center;transition:opacity .25s;pointer-events:none}
+.toast[hidden]{display:none}
+.code{font-family:var(--display);font-size:38px;font-weight:800;letter-spacing:.08em;text-align:center;background:var(--bg2);border:2px dashed var(--accent);border-radius:14px;padding:18px 10px;font-variant-numeric:tabular-nums}
+.cap{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;user-select:text;-webkit-user-select:text;word-break:break-word}
+.water{background:linear-gradient(135deg,#153a52,#1a2a5a);border:1px solid #2d5f80}
+details summary{cursor:pointer;color:var(--teal);font-weight:600;font-size:13px}
+details p{margin-top:8px}
+.hero{display:flex;flex-direction:column;gap:6px}
+.hero h2{font-size:28px}
+.ts{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;white-space:nowrap}
+.file{display:none}
+.rowbtns{display:flex;gap:4px;flex:none}
+hr{border:0;border-top:1px solid var(--line);margin:2px 0}
+.empty{color:var(--muted);text-align:center;padding:18px 10px;font-size:14px}
+@media (prefers-reduced-motion:reduce){.you-ring,.pill.live::before{animation:none}}
+@media (min-width:700px){.photos{grid-template-columns:repeat(4,1fr)}}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="wordmark">🐍 Slither<em>.</em></div>
+    <button class="pill music" id="musicBtn" aria-pressed="false" aria-label="Snake music">🔇</button><div class="pill" id="statusPill">Queenstown</div>
+  </header>
+  <main id="main">
+    <section class="tab" id="tab-map"></section>
+    <section class="tab" id="tab-plan" hidden></section>
+    <section class="tab" id="tab-live" hidden></section>
+    <section class="tab" id="tab-deals" hidden></section>
+    <section class="tab" id="tab-recap" hidden></section>
+  </main>
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="map"><span class="ico">🗺️</span>Map</button>
+    <button data-tab="plan"><span class="ico">🐍</span>Plan</button>
+    <button data-tab="live"><span class="ico">📍</span>Tonight</button>
+    <button data-tab="deals"><span class="ico">🏷️</span>Deals</button>
+    <button data-tab="recap"><span class="ico">📸</span>Recap</button>
+  </nav>
+  <div id="sheetHost"></div>
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- Queenstown data (stylised map units; 1 unit ≈ 1.6 m). Pins are approximate. ---------- */
+const BARS = [
+  {id:'little-blackwood', name:'Little Blackwood', area:'Steamer Wharf', x:74,  y:318, vibe:'Cocktails by the fire', tags:['cocktails','late']},
+  {id:'atlas',            name:'Atlas Beer Cafe',  area:'Steamer Wharf', x:92,  y:324, vibe:'Craft beer, lake views', tags:['craft beer','food']},
+  {id:'perkys',           name:"Perky's",          area:'Steamer Wharf', x:104, y:347, vibe:'The floating bar', tags:['lake','sunset']},
+  {id:'pub-on-wharf',     name:'Pub on Wharf',     area:'Steamer Wharf', x:120, y:315, vibe:'Live music, big pub', tags:['live music','food']},
+  {id:'smiths',           name:'Smiths Craft Beer House', area:'Beach St', x:152, y:313, vibe:'Taps for days', tags:['craft beer','food']},
+  {id:'the-find',         name:'The Find',         area:'Beach St',      x:200, y:318, vibe:'Hidden bar, good hosts', tags:['cocktails']},
+  {id:'lone-star',        name:'Lone Star',        area:'Uptown',        x:116, y:150, vibe:'Big feeds before the night', tags:['food']},
+  {id:'harrys',           name:"Harry's Pool Bar", area:'Shotover St',   x:190, y:180, vibe:'Pool tables and pints', tags:['pool','late']},
+  {id:'world-bar',        name:'World Bar',        area:'Shotover St',   x:236, y:172, vibe:'Teapots and a dancefloor', tags:['dancefloor','late']},
+  {id:'pog-mahones',      name:"Pog Mahone's",     area:'Rees St',       x:226, y:262, vibe:'Irish pub, live tunes', tags:['live music','food']},
+  {id:'buffalo-club',     name:'Buffalo Club',     area:'Rees St',       x:252, y:228, vibe:'Dance till late', tags:['dancefloor','late']},
+  {id:'rhinos',           name:"Rhino's Ski Shack", area:'Cow Lane',     x:246, y:300, vibe:'Après vibes all year', tags:['dancefloor','late']},
+  {id:'bunker',           name:'Bunker',           area:'Cow Lane',      x:268, y:272, vibe:'Hidden, whisky, fire pit', tags:['cocktails','late']},
+  {id:'vinyl',            name:'Vinyl Underground', area:'Cow Lane',     x:282, y:254, vibe:'Basement, records, sweat', tags:['dancefloor','late']},
+  {id:'ballarat',         name:'The Ballarat',     area:'The Mall',      x:292, y:310, vibe:'Old-school pub on the Mall', tags:['food','live music']},
+  {id:'winnies',          name:'Winnies',          area:'The Mall',      x:312, y:286, vibe:'Pizza, then the roof opens', tags:['food','dancefloor','late']},
+  {id:'bardeaux',         name:'Bardeaux',         area:'The Mall',      x:328, y:268, vibe:'Wine, fire, low light', tags:['cocktails']},
+  {id:'eichardts',        name:"Eichardt's Bar",   area:'Marine Parade', x:296, y:356, vibe:'Classy lakefront', tags:['cocktails','lake']},
+  {id:'zephyr',           name:'Zephyr',           area:'Searle Lane',   x:338, y:308, vibe:'Rock bar, pool, late', tags:['pool','late','live music']},
+  {id:'searle-lane',      name:'Searle Lane',      area:'Searle Lane',   x:352, y:290, vibe:'Courtyard bar', tags:['cocktails','food']},
+  {id:'barmuda',          name:'Barmuda',          area:'Searle Lane',   x:362, y:278, vibe:'Cocktails and shisha', tags:['cocktails','late']},
+  {id:'cowboys',          name:'Cowboys',          area:'Searle Lane',   x:374, y:264, vibe:'Bull-riding and boots', tags:['dancefloor','late']},
+  {id:'yonder',           name:'Yonder',           area:'Church St',     x:372, y:322, vibe:'Good food, live sets', tags:['food','live music']},
+  {id:'1876',             name:'1876',             area:'Village Green', x:404, y:178, vibe:'Sunny garden bar', tags:['food','pool']},
+  {id:'lucky-lukes',      name:'Lucky Lukes',      area:'The Mall',      x:322, y:300, vibe:'Good luck getting out early', tags:['late','dancefloor']},
+  {id:'soho',             name:'Soho',             area:'Church St',     x:388, y:296, vibe:'Late, loud, lovely', tags:['late','cocktails']},
+  {id:'the-club',         name:'The Club',         area:'Cow Lane',      x:298, y:248, vibe:'Where the night ends', tags:['dancefloor','late']},
+];
+const SUGGESTED = [
+  {name:"Off me 'Ed", ids:['barmuda','bardeaux','lucky-lukes','soho'], blurb:'Lane-hopping classic. Cocktails, wine, then it gets loose.'},
+  {name:'Blair Stitch Project', ids:['lucky-lukes','barmuda','bardeaux','the-club'], blurb:'Start loud, settle in, finish on the dancefloor.'},
+];
+const byId = Object.fromEntries(BARS.map(b => [b.id, b]));
+const AREAS = [...new Set(BARS.map(b => b.area))];
+
+const STREETS = [
+  {pts:[[82,310],[262,345]]},                        // Beach St
+  {pts:[[262,345],[338,364],[412,398],[445,455]]},   // Marine Parade
+  {pts:[[262,345],[362,225]]},                       // The Mall
+  {pts:[[362,225],[432,140]]},                       // Ballarat St
+  {pts:[[432,140],[470,96]], lane:true},
+  {pts:[[232,72],[250,110],[480,345]]},              // Camp St
+  {pts:[[300,52],[540,300],[600,330]]},              // Stanley St / Frankton Rd
+  {pts:[[8,214],[60,190],[305,165]]},                // Shotover St
+  {pts:[[182,322],[300,166]]},                       // Rees St
+  {pts:[[222,330],[300,232]], lane:true},            // Cow Lane
+  {pts:[[302,352],[387,250]], lane:true},            // Searle Lane
+  {pts:[[336,358],[408,271]]},                       // Church St
+  {pts:[[122,186],[108,60]]},                        // Brecon St
+  {pts:[[0,290],[82,310]]},                          // Lake Esplanade
+  {pts:[[70,142],[262,118]]},                        // Isle St
+  {pts:[[90,95],[232,72]]},                          // Man St
+  {pts:[[480,345],[540,405]]},                       // Park St
+  {pts:[[190,118],[200,70]], lane:true},
+  {pts:[[480,200],[560,120]], lane:true},
+];
+const LAND = [[0,0],[600,0],[600,440],[545,480],[480,500],[445,455],[412,398],[338,364],[262,346],[180,324],[82,310],[0,302]];
+const SHORE = LAND.slice(2).concat([LAND[0]]).slice(0, -1); // land edge that touches water
+const GARDENS = [[445,455],[480,500],[545,480],[600,440],[600,520],[445,520]];
+const MAP_W = 600, MAP_H = 520;
+// Lat/lng ↔ map units. Origin: foot of the Mall at Marine Parade.
+const GEO = {lat:-45.03225, lng:168.66125, x:262, y:345, mPerUnit:1.6};
+function toXY(lat, lng){
+  const dx = (lng - GEO.lng) * 111320 * Math.cos(GEO.lat * Math.PI/180);
+  const dy = (lat - GEO.lat) * 111320;
+  return [GEO.x + dx / GEO.mPerUnit, GEO.y - dy / GEO.mPerUnit];
+}
+const distM = (a, b) => Math.hypot(a[0]-b[0], a[1]-b[1]) * GEO.mPerUnit;
+
+/* ---------- procedural town: road segments, building blocks, trees (deterministic) ---------- */
+function rng(seed){ let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function inPoly(p, poly){ let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++){ const [xi, yi] = poly[i], [xj, yj] = poly[j]; if (((yi > p[1]) !== (yj > p[1])) && (p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi)) inside = !inside; } return inside; }
+const inLand = p => inPoly(p, LAND);
+const inPark = p => inPoly(p, GARDENS) || Math.hypot(p[0]-406, p[1]-167) < 26 || Math.hypot(p[0]-190, p[1]-328) < 14;
+const SEG = []; STREETS.forEach(st => { for (let i = 0; i < st.pts.length - 1; i++) SEG.push({a: st.pts[i], b: st.pts[i+1], w: st.lane ? 5 : 9}); });
+function segDist(p, s){ const [ax, ay] = s.a, [bx, by] = s.b; const dx = bx-ax, dy = by-ay; let t = ((p[0]-ax)*dx + (p[1]-ay)*dy) / (dx*dx + dy*dy); t = Math.max(0, Math.min(1, t)); return Math.hypot(p[0] - (ax + t*dx), p[1] - (ay + t*dy)); }
+const TOWN = (() => {
+  const r = rng(7); const fills = ['#1d2550', '#212b5e', '#1a2149', '#242f66', '#1f2857'];
+  let blocks = '';
+  for (const s of SEG){
+    const dx = s.b[0]-s.a[0], dy = s.b[1]-s.a[1], L = Math.hypot(dx, dy); const ux = dx/L, uy = dy/L, nx = -uy, ny = ux; const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    let pos = 5 + r() * 6;
+    while (pos < L - 6){
+      const w = 7 + r() * 9; if (pos + w > L - 3) break;
+      for (const side of [-1, 1]){
+        if (r() < 0.15) continue;
+        const d = 7 + r() * 9; const off = s.w/2 + 2.5 + d/2;
+        const cx = s.a[0] + ux*(pos + w/2) + nx*side*off, cy = s.a[1] + uy*(pos + w/2) + ny*side*off;
+        if (cx < 2 || cx > MAP_W - 2 || cy < 2 || !inLand([cx, cy]) || inPark([cx, cy])) continue;
+        if (SEG.some(o => o !== s && segDist([cx, cy], o) < o.w/2 + d/2 + 1.5)) continue;
+        blocks += `<rect x="${(cx - w/2).toFixed(1)}" y="${(cy - d/2).toFixed(1)}" width="${w.toFixed(1)}" height="${d.toFixed(1)}" rx="1" fill="${fills[Math.floor(r() * fills.length)]}" transform="rotate(${ang.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})"/>`;
+      }
+      pos += w + 2 + r() * 3;
+    }
+  }
+  let trees = ''; let n = 0, tries = 0;
+  while (n < 34 && tries < 600){ tries++; const x = 445 + r() * 155, y = 400 + r() * 120; if (!inPoly([x, y], GARDENS)) continue; n++; trees += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.2 + r() * 2.2).toFixed(1)}" fill="#2a6b4e"/>`; }
+  for (let i = 0; i < 9; i++){ const t = i / 8; const x = 395 + t * 24 - 8 + r() * 6, y = 150 + t * 30 - 6 + r() * 6; trees += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(1.8 + r() * 1.6).toFixed(1)}" fill="#2a6b4e"/>`; }
+  let roads = '', roadFill = '', center = '';
+  for (const s of SEG){
+    const l = `x1="${s.a[0]}" y1="${s.a[1]}" x2="${s.b[0]}" y2="${s.b[1]}"`;
+    roads += `<line class="rc" ${l} stroke-width="${s.w + 3}"/>`;
+    roadFill += `<line class="rf" ${l} stroke-width="${s.w}"/>`;
+    if (s.w > 6) center += `<line class="rm" ${l}/>`;
+  }
+  let waves = '';
+  for (let i = 0; i < 14; i++){ const x = 10 + r() * 400, y = 340 + r() * 170; if (inLand([x, y]) || inLand([x + 24, y])) continue; waves += `<path class="wave" d="M${x.toFixed(0)},${y.toFixed(0)} q6,-3 12,0 t12,0"/>`; }
+  return {blocks, trees, roads, roadFill, center, waves};
+})();
+
+/* Example deals. All are placeholders until a venue claims its bar. Kept inside NZ responsible-promotion rules: no free or heavily discounted alcohol. */
+const SEED_DEALS = [
+  {id:'d1', bar:'winnies', title:'Free garlic bread with any pizza', detail:'Show your Slither at the counter. Dine-in only.', cat:'Food', when:'6–9pm daily', example:true},
+  {id:'d2', bar:'zephyr', title:'Crew skips the line', detail:'Groups of 4+ on a Slither walk straight in before 11pm.', cat:'Entry', when:'Fri–Sat, 9–11pm', example:true},
+  {id:'d3', bar:'1876', title:'Free pool, first hour', detail:'The table is on us for Slither crews. Ask at the bar.', cat:'Experience', when:'6–7pm daily', example:true},
+  {id:'d4', bar:'yonder', title:'$5 house mocktails + live set', detail:'Sober driver tonight? This one is for you.', cat:'Non-alcoholic', when:'Thursdays from 8pm', example:true},
+  {id:'d5', bar:'rhinos', title:'Bowl of fries with your first round', detail:'One bowl per crew, show the app.', cat:'Food', when:'8–10pm', example:true},
+  {id:'d6', bar:'bunker', title:'Slither guest list', detail:'Show the app at the door and you are on the list.', cat:'Entry', when:'After 11pm', example:true},
+  {id:'d7', bar:'perkys', title:'Sunset toastie', detail:'Free toastie with any drink while the sun is still up.', cat:'Food', when:'5–7pm', example:true},
+  {id:'d8', bar:'smiths', title:'Water station, always free', detail:'Grab a bottle on your way through. No purchase needed.', cat:'Non-alcoholic', when:'Any time', example:true},
+  {id:'d9', bar:'pog-mahones', title:'Live band, no cover', detail:'Slither crews get in free on band nights.', cat:'Music', when:'Fri–Sat from 9pm', example:true},
+  {id:'d10', bar:'lone-star', title:'Free nachos for the table', detail:'Groups of 4+ before 8pm. Fuel up first.', cat:'Food', when:'5–8pm', example:true},
+];
+const DEAL_CATS = ['Food','Entry','Experience','Non-alcoholic','Music','Drink special'];
+const STOP_MINUTES = 45;
+
+/* ---------- state ---------- */
+const KEY = 'slither.qt.v1';
+const defaults = () => ({ plan:{name:'', ids:[], start:'20:00'}, night:null, nights:[], deals:[], venues:{}, tab:'map', dealFilter:'All', areaFilter:'All' });
+let S = defaults();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(defaults(), JSON.parse(raw)); } catch(e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) { toast('Storage is full or blocked. Photos may not be kept.'); } }
+
+let toastT = null;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2400); }
+
+const pad = n => String(n).padStart(2,'0');
+function fmtTime(ts){ const d = new Date(ts); let h = d.getHours(); const m = pad(d.getMinutes()); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return `${h}:${m}${ap}`; }
+function fmtClock(hhmm, addMin){ const [h, m] = hhmm.split(':').map(Number); const d = new Date(); d.setHours(h, m + addMin, 0, 0); return fmtTime(d.getTime()); }
+function fmtDur(ms){ const m = Math.max(0, Math.round(ms/60000)); const h = Math.floor(m/60); return h ? `${h}h ${pad(m%60)}m` : `${m}m`; }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString(undefined, {weekday:'short', day:'numeric', month:'short'}); }
+function barIG(id){ const v = S.venues[id]; return ((v && v.ig) || '').replace(/^@/, ''); }
+function allDeals(){ return [...S.deals, ...SEED_DEALS]; }
+function dealsFor(id){ return allDeals().filter(d => d.bar === id); }
+
+/* ---------- snake drawing ---------- */
+function smoothPath(pts){
+  if (pts.length < 2) return '';
+  if (pts.length === 2) return `M${pts[0][0]},${pts[0][1]} L${pts[1][0]},${pts[1][1]}`;
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++){
+    const p0 = pts[i-1] || pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2] || p2;
+    const c1 = [p1[0] + (p2[0]-p0[0])/6, p1[1] + (p2[1]-p0[1])/6];
+    const c2 = [p2[0] - (p3[0]-p1[0])/6, p2[1] - (p3[1]-p1[1])/6];
+    d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`;
+  }
+  return d;
+}
+const ph = () => 'animation-delay:-' + (Date.now() % 100000) + 'ms';
+function snakeBody(pts){
+  if (pts.length < 2) return '';
+  const d = smoothPath(pts); const p0 = pts[0], p1 = pts[1];
+  const ang = Math.atan2(p0[1]-p1[1], p0[0]-p1[0]) * 180 / Math.PI;
+  return `<g class="snakeg" style="${ph()}"><path class="sk-tail" d="M0,-5.5 L17,0 L0,5.5 Z" transform="translate(${p0[0]},${p0[1]}) rotate(${ang.toFixed(1)})"/>
+    <path class="sk-outline" d="${d}"/><path class="sk-fill" d="${d}"/><path class="sk-scales" d="${d}"/><path class="sk-spine" d="${d}" style="${ph()}"/></g>`;
+}
+function snakeHead(p, prev, sc){
+  const ang = prev ? Math.atan2(p[1]-prev[1], p[0]-prev[0]) : -Math.PI/4;
+  const deg = ang * 180 / Math.PI; sc = sc || 1;
+  return `<g transform="translate(${p[0]},${p[1]}) rotate(${deg.toFixed(1)}) scale(${sc.toFixed(2)})"><g class="pop"><g class="head" style="${ph()}">
+    <path d="M-9,-9 C6,-13 15,-7 18,0 C15,7 6,13 -9,9 Z" fill="#45b862" stroke="#174d2a" stroke-width="1.6"/>
+    <path d="M-4,-6 C4,-8 10,-5 13,0 C10,5 4,8 -4,6 Z" fill="#6fd25a" opacity=".55"/>
+    <path class="tongue" style="${ph()}" d="M18,0 h7 l4,-3 M25,0 l4,3" fill="none" stroke="#ff3d6e" stroke-width="1.8" stroke-linecap="round"/>
+    <g class="eye eye-l"><ellipse cx="6" cy="-5" rx="3.2" ry="3" fill="#ffd84d"/><ellipse cx="6.8" cy="-5" rx="1" ry="2.2" fill="#111"/></g>
+    <g class="eye eye-r"><ellipse cx="6" cy="5" rx="3.2" ry="3" fill="#ffd84d"/><ellipse cx="6.8" cy="5" rx="1" ry="2.2" fill="#111"/></g>
+    <circle cx="14" cy="-2" r=".8" fill="#174d2a"/><circle cx="14" cy="2" r=".8" fill="#174d2a"/>
+  </g></g></g>`;
+}
+function mapSVG(o){
+  // o: {ids (planned), night, compact, viewBox}
+  const ids = o.ids || [];
+  const night = o.night || null;
+  const visited = night ? night.stops.map(s => s.id) : [];
+  const current = night && night.stops.length && !night.stops[night.stops.length-1].out ? night.stops[night.stops.length-1].id : null;
+  const vb = o.viewBox || `0 0 ${MAP_W} ${MAP_H}`;
+  let s = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stylised map of Queenstown bars">`;
+  s += `<defs>
+    <linearGradient id="snakeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a9d4f"/><stop offset=".5" stop-color="#7bd24a"/><stop offset="1" stop-color="#3cae5c"/></linearGradient>
+    <pattern id="scales" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><path d="M.5,.5 h5 v5 h-5 z" fill="rgba(0,0,0,.22)" stroke="rgba(255,255,255,.3)" stroke-width=".7"/></pattern>
+    <radialGradient id="lakeGlow" cx=".35" cy=".85" r=".8"><stop offset="0" stop-color="#17445e"/><stop offset="1" stop-color="#0c2538"/></radialGradient>
+  </defs>`;
+  s += `<rect x="-400" y="-400" width="1400" height="1400" fill="url(#lakeGlow)"/>`;
+  s += TOWN.waves;
+  s += `<polyline class="shore" points="${SHORE.map(p => p.join(',')).join(' ')}"/>`;
+  s += `<polygon points="${LAND.map(p => p.join(',')).join(' ')}" fill="var(--land)"/>`;
+  s += `<polygon class="pk" points="${GARDENS.map(p => p.join(',')).join(' ')}"/>`;
+  s += `<rect class="pk" x="384" y="150" width="44" height="34" rx="8" transform="rotate(-50 406 167)"/>`; // Village Green
+  s += `<rect class="pk" x="160" y="318" width="60" height="14" rx="4" transform="rotate(10 190 325)"/>`; // Earnslaw Park
+  s += TOWN.blocks;
+  s += TOWN.roads + TOWN.roadFill + TOWN.center;
+  s += TOWN.trees;
+  s += `<g transform="rotate(10 95 327)"><rect x="56" y="312" width="78" height="30" rx="3" fill="#3a3f5f"/>${[0,1,2,3,4,5,6].map(i => `<line x1="${62 + i*11}" y1="312" x2="${62 + i*11}" y2="342" stroke="#2c3150" stroke-width="1"/>`).join('')}</g>`; // Steamer Wharf
+  s += `<text class="stl" x="96" y="353" transform="rotate(10 96 353)">Steamer Wharf</text>`;
+  s += `<text class="wl" x="40" y="440">Lake Wakatipu</text>`;
+  s += `<text class="stl" x="515" y="512">Queenstown Gardens</text>`;
+  // trail
+  if (night && night.trail.length > 1){
+    s += `<polyline class="trail" points="${night.trail.map(p => p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"/>`;
+  }
+  // snake
+  const planPts = ids.map(id => byId[id]).filter(Boolean).map(b => [b.x, b.y]);
+  let head = '', headAt = null;
+  const hs = Math.min(1.8, 1 + 0.1 * Math.max(0, (night ? visited.length : ids.length) - 1));
+  if (night){
+    const donePts = visited.map(id => byId[id]).filter(Boolean).map(b => [b.x, b.y]);
+    const remaining = night.planIds.filter(id => !visited.includes(id)).map(id => byId[id]).filter(Boolean).map(b => [b.x, b.y]);
+    if (remaining.length){ const from = donePts.length ? [donePts[donePts.length-1]] : []; const rp = [...from, ...remaining]; if (rp.length > 1) s += `<path class="snake-plan" d="${smoothPath(rp)}"/>`; }
+    s += snakeBody(donePts);
+    if (donePts.length){ headAt = donePts[donePts.length-1]; head = snakeHead(headAt, donePts[donePts.length-2], hs); }
+  } else if (planPts.length > 1){
+    s += snakeBody(planPts);
+    headAt = planPts[planPts.length-1]; head = snakeHead(headAt, planPts[planPts.length-2], hs);
+  } else if (planPts.length === 1){
+    headAt = planPts[0]; head = snakeHead(headAt, null, hs);
+  }
+  // pins
+  const order = night ? night.planIds : ids;
+  for (const b of BARS){
+    const i = order.indexOf(b.id);
+    const done = visited.includes(b.id);
+    const cls = ['pin', i >= 0 ? 'planned' : '', done ? 'done' : '', current === b.id ? 'now' : ''].join(' ').trim();
+    const show = !o.compact || i >= 0 || done;
+    const r = i >= 0 || done ? 8 : 5.5;
+    s += `<g class="${cls}" data-bar="${b.id}">`;
+    s += `<circle cx="${b.x}" cy="${b.y}" r="${r + 7}" fill="transparent"/>`;
+    s += `<circle class="dot" cx="${b.x}" cy="${b.y}" r="${r}"/>`;
+    if (i >= 0) s += `<text class="num" x="${b.x}" y="${b.y + 3.3}">${i+1}</text>`;
+    if (show) s += `<text x="${b.x + r + 3}" y="${b.y + 3}">${esc(b.name)}</text>`;
+    s += `</g>`;
+  }
+  s += head;
+  if (night && night.you && !(headAt && Math.hypot(headAt[0]-night.you[0], headAt[1]-night.you[1]) < 8)){
+    s += `<circle class="you-ring" cx="${night.you[0]}" cy="${night.you[1]}" r="9"/><circle class="you" cx="${night.you[0]}" cy="${night.you[1]}" r="5"/>`;
+  }
+  s += `</svg>`;
+  return s;
+}
+/* ---------- pan + zoom (every map keeps its own view) ---------- */
+const views = {};
+const MINW = 140, MAXW = MAP_W * 1.3;
+function getView(id){ return views[id] || (views[id] = {x: 0, y: 0, w: MAP_W, h: MAP_H}); }
+function vbOf(id){ const v = getView(id); return `${v.x.toFixed(1)} ${v.y.toFixed(1)} ${v.w.toFixed(1)} ${v.h.toFixed(1)}`; }
+function mapInner(o){
+  return mapSVG(Object.assign({}, o, {viewBox: vbOf(o.id)})) +
+    `<div class="zoom"><button class="btn icon" data-zoom="in" aria-label="Zoom in">+</button><button class="btn icon" data-zoom="out" aria-label="Zoom out">−</button></div>
+     <div class="legend">${o.legend || 'Pinch or scroll to zoom · drag to pan'}</div>`;
+}
+function mapBlock(o){
+  o.id = o.id || 'm' + Math.random().toString(36).slice(2, 7);
+  return `<div class="mapwrap" id="${o.id}">${mapInner(o)}</div>`;
+}
+function setView(id, v){
+  v.w = Math.min(MAXW, Math.max(MINW, v.w)); v.h = v.w * MAP_H / MAP_W;
+  v.x = Math.min(MAP_W - v.w * 0.35, Math.max(-v.w * 0.65, v.x));
+  v.y = Math.min(MAP_H - v.h * 0.35, Math.max(-v.h * 0.65, v.y));
+  views[id] = v;
+  const svg = document.querySelector('#' + id + ' svg'); if (svg) svg.setAttribute('viewBox', vbOf(id));
+}
+function zoomAt(id, factor, fx, fy){
+  const v = getView(id); fx = fx == null ? 0.5 : fx; fy = fy == null ? 0.5 : fy;
+  const w = Math.min(MAXW, Math.max(MINW, v.w * factor)); const h = w * MAP_H / MAP_W;
+  const cx = v.x + v.w * fx, cy = v.y + v.h * fy;
+  setView(id, {x: cx - w * fx, y: cy - h * fy, w, h});
+}
+function fracIn(wrap, clientX, clientY){ const r = wrap.getBoundingClientRect(); return [(clientX - r.left) / r.width, (clientY - r.top) / r.height]; }
+const ptrs = new Map(); let gesture = null, suppressClick = false;
+document.addEventListener('pointerdown', e => {
+  const wrap = e.target.closest('.mapwrap'); if (!wrap || e.target.closest('button')) return;
+  ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY, wrap});
+  try { wrap.setPointerCapture(e.pointerId); } catch(err) {}
+  const v = getView(wrap.id);
+  if (ptrs.size === 1) gesture = {type: 'drag', wrap, sx: e.clientX, sy: e.clientY, vx: v.x, vy: v.y, moved: false};
+  else if (ptrs.size === 2){
+    const [a, b] = [...ptrs.values()];
+    gesture = {type: 'pinch', wrap, d0: Math.hypot(a.x - b.x, a.y - b.y), v0: Object.assign({}, v), mid: fracIn(wrap, (a.x + b.x) / 2, (a.y + b.y) / 2), moved: true};
+  }
+});
+document.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId) || !gesture) return;
+  const p = ptrs.get(e.pointerId); p.x = e.clientX; p.y = e.clientY;
+  if (gesture.type === 'pinch' && ptrs.size === 2){
+    const [a, b] = [...ptrs.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (!d || !gesture.d0) return;
+    const w = Math.min(MAXW, Math.max(MINW, gesture.v0.w * gesture.d0 / d)); const h = w * MAP_H / MAP_W;
+    const mid = fracIn(gesture.wrap, (a.x + b.x) / 2, (a.y + b.y) / 2);
+    const cx = gesture.v0.x + gesture.v0.w * gesture.mid[0], cy = gesture.v0.y + gesture.v0.h * gesture.mid[1];
+    setView(gesture.wrap.id, {x: cx - w * mid[0], y: cy - h * mid[1], w, h});
+  } else if (gesture.type === 'drag'){
+    const dx = e.clientX - gesture.sx, dy = e.clientY - gesture.sy;
+    if (Math.abs(dx) + Math.abs(dy) > 6) gesture.moved = true;
+    if (!gesture.moved) return;
+    const v = getView(gesture.wrap.id); const scale = v.w / gesture.wrap.clientWidth;
+    setView(gesture.wrap.id, {x: gesture.vx - dx * scale, y: gesture.vy - dy * scale, w: v.w, h: v.h});
+  }
+});
+function endPtr(e){
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId);
+  if (gesture && gesture.moved){ suppressClick = true; setTimeout(() => { suppressClick = false; }, 50); }
+  if (ptrs.size === 0) gesture = null;
+  else if (ptrs.size === 1){ const [a] = [...ptrs.values()]; const v = getView(a.wrap.id); gesture = {type: 'drag', wrap: a.wrap, sx: a.x, sy: a.y, vx: v.x, vy: v.y, moved: true}; }
+}
+document.addEventListener('pointerup', endPtr);
+document.addEventListener('pointercancel', endPtr);
+document.addEventListener('wheel', e => {
+  const wrap = e.target.closest('.mapwrap'); if (!wrap) return;
+  e.preventDefault();
+  const [fx, fy] = fracIn(wrap, e.clientX, e.clientY);
+  zoomAt(wrap.id, Math.exp(e.deltaY * 0.0022), fx, fy);
+}, {passive: false});
+document.addEventListener('dblclick', e => {
+  const wrap = e.target.closest('.mapwrap'); if (!wrap || e.target.closest('button')) return;
+  const [fx, fy] = fracIn(wrap, e.clientX, e.clientY); zoomAt(wrap.id, 0.55, fx, fy);
+});
+
+/* ---------- music: a generated groove the snake dances to (Web Audio, no files needed) ---------- */
+const music = (() => {
+  const BPM = 112, SPB = 60 / BPM, STEP = SPB / 4;
+  const ROOTS = [38, 41, 36, 43], QUAL = [[0,3,7],[0,4,7],[0,4,7],[0,4,7]];
+  const BASS = [0,null,null,0, null,null,12,null, 0,null,7,null, 10,null,12,null];
+  const KICK = [0,8,11], SNARE = [4,12], ARP = {1:0, 5:1, 9:2, 13:3};
+  let ctx = null, master = null, noise = null, playing = false, timer = null, step = 0, nextT = 0;
+  const f = m => 440 * Math.pow(2, (m - 69) / 12);
+  function init(){
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = 0.42;
+    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+    noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.3), ctx.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  function env(g, t, peak, dec){ g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + dec); }
+  function osc(type, freq, t, dur, peak, dec){ const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(freq, t); env(g, t, peak, dec); o.connect(g); g.connect(master); o.start(t); o.stop(t + dur); }
+  function kick(t){ const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); env(g, t, 1, 0.28); o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.3); }
+  function hat(t, open){ const s = ctx.createBufferSource(); s.buffer = noise; const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000; const g = ctx.createGain(); env(g, t, open ? 0.22 : 0.15, open ? 0.18 : 0.045); s.connect(hp); hp.connect(g); g.connect(master); s.start(t); s.stop(t + 0.2); }
+  function snare(t){ const s = ctx.createBufferSource(); s.buffer = noise; const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; const g = ctx.createGain(); env(g, t, 0.45, 0.16); s.connect(bp); bp.connect(g); g.connect(master); s.start(t); s.stop(t + 0.2); osc('sine', 190, t, 0.12, 0.45, 0.1); }
+  function bass(t, m){ const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = f(m); lp.type = 'lowpass'; lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(180, t + 0.2); env(g, t, 0.5, 0.22); o.connect(lp); lp.connect(g); g.connect(master); o.start(t); o.stop(t + 0.25); }
+  function stab(t, ms){ for (const m of ms) osc('triangle', f(m), t, 0.3, 0.08, 0.26); }
+  function pluck(t, m){ osc('square', f(m), t, 0.18, 0.045, 0.14); }
+  function schedule(st, t){
+    const bar = Math.floor(st / 16) % 4, s = st % 16, root = ROOTS[bar], q = QUAL[bar];
+    if (KICK.includes(s)) kick(t);
+    if (SNARE.includes(s)) snare(t);
+    if (s % 2 === 0) hat(t, s === 14);
+    if (BASS[s] != null) bass(t, root + BASS[s]);
+    if (s === 2 || s === 10) stab(t, q.map(i => root + 12 + i));
+    if (ARP[s] != null){ const tones = [root + 24, root + 24 + q[1], root + 24 + q[2], root + 36]; pluck(t, tones[ARP[s]]); }
+  }
+  function tick(){ while (nextT < ctx.currentTime + 0.15){ schedule(step, nextT); nextT += STEP; step = (step + 1) % 64; } }
+  function start(){
+    if (playing) return;
+    try { if (!ctx) init(); } catch(e) { return; }
+    ctx.resume().catch(() => {});
+    playing = true; step = 0; nextT = ctx.currentTime + 0.06; timer = setInterval(tick, 30); tick();
+    document.body.classList.add('dancing'); document.documentElement.style.setProperty('--beat', SPB.toFixed(3) + 's');
+    updateBtn();
+  }
+  function stop(){ if (!playing) return; playing = false; clearInterval(timer); if (ctx) ctx.suspend().catch(() => {}); document.body.classList.remove('dancing'); updateBtn(); }
+  function updateBtn(){ const b = $('#musicBtn'); if (b){ b.classList.toggle('on', playing); b.textContent = playing ? '🎵' : '🔇'; b.setAttribute('aria-pressed', String(playing)); } }
+  document.addEventListener('visibilitychange', () => { if (!ctx || !playing) return; if (document.hidden) ctx.suspend().catch(() => {}); else ctx.resume().catch(() => {}); });
+  return {start, stop, updateBtn, get playing(){ return playing; }};
+})();
+
+/* ---------- plan ---------- */
+function planText(){
+  const ids = S.plan.ids; const name = S.plan.name.trim() || 'Tonight';
+  const lines = ids.map((id, i) => `${i+1}. ${byId[id].name} · ${fmtClock(S.plan.start, i * STOP_MINUTES)}`);
+  return `🐍 Slither: ${name}\n${lines.join('\n')}\n\nOpen it in Slither:\n${planLink()}`;
+}
+function planLink(){
+  const base = location.href.split('#')[0];
+  const name = S.plan.name.trim().replace(/[^A-Za-z0-9 -]/g, '').trim().replace(/\s+/g, '_');
+  return base + '#s.' + S.plan.ids.join('.') + (name ? '~' + name : '');
+}
+function waLink(text){ return 'https://wa.me/?text=' + encodeURIComponent(text); }
+function parseHash(){
+  const m = /^#s\.(.+)$/.exec(location.hash || ''); if (!m) return null;
+  const [idsPart, namePart] = m[1].split('~');
+  const ids = idsPart.split('.').filter(id => byId[id]);
+  if (!ids.length) return null;
+  return {ids, name: (namePart || '').replace(/_/g, ' ')};
+}
+function offerIncomingPlan(){
+  const p = parseHash(); if (!p) return;
+  const same = p.ids.join('.') === S.plan.ids.join('.');
+  if (same) return;
+  openSheet(`<h3>You've been sent a Slither 🐍</h3>
+    <p class="muted small">${esc(p.name || 'Untitled')} · ${p.ids.length} stops</p>
+    <div class="list">${p.ids.map((id, i) => `<div class="item"><span class="num">${i+1}</span><span class="n">${esc(byId[id].name)}</span><span class="muted small">${esc(byId[id].area)}</span></div>`).join('')}</div>
+    <button class="btn primary block" id="loadIncoming">Load this Slither</button>
+    <button class="btn ghost block" data-close>Not now</button>`);
+  $('#loadIncoming').onclick = () => { S.plan.ids = p.ids; S.plan.name = p.name; save(); closeSheet(); go('plan'); toast('Slither loaded'); };
+}
+function winkAll(){ document.querySelectorAll('.pop').forEach(g => { g.classList.remove('wink'); void g.getBoundingClientRect(); g.classList.add('wink'); }); }
+function addToPlan(id){ if (S.plan.ids.includes(id)) return toast('Already on the Slither'); S.plan.ids.push(id); save(); if (S.music !== false) music.start(); render(); winkAll(); toast(`${byId[id].name} added 😉 (${S.plan.ids.length} stops)`); }
+function removeFromPlan(id){ S.plan.ids = S.plan.ids.filter(x => x !== id); if (!S.plan.ids.length) music.stop(); save(); render(); }
+function movePlan(id, dir){ const i = S.plan.ids.indexOf(id); const j = i + dir; if (i < 0 || j < 0 || j >= S.plan.ids.length) return; [S.plan.ids[i], S.plan.ids[j]] = [S.plan.ids[j], S.plan.ids[i]]; save(); render(); }
+
+/* ---------- night (live tracking) ---------- */
+let gpsWatch = null, demoToken = 0, tick = null;
+function startNight(mode, ids){
+  if (S.night) return;
+  const planIds = ids || S.plan.ids.slice();
+  S.night = {startedAt: Date.now(), mode, planIds, planName: S.plan.name, stops: [], trail: [], waters: 0, you: null, lastAuto: 0};
+  save();
+  if (mode === 'gps') startGPS();
+  if (mode === 'demo') runDemo();
+  render();
+}
+function currentStop(){ const n = S.night; if (!n || !n.stops.length) return null; const s = n.stops[n.stops.length-1]; return s.out ? null : s; }
+function checkIn(id, auto){
+  const n = S.night; if (!n) return;
+  const cur = currentStop();
+  if (cur && cur.id === id) return toast(`You're already at ${byId[id].name}`);
+  if (cur) cur.out = Date.now();
+  n.stops.push({id, in: Date.now(), out: null, photos: []});
+  n.you = [byId[id].x, byId[id].y];
+  n.trail.push([byId[id].x, byId[id].y, Date.now()]);
+  n.nudge = true;
+  save(); render();
+  toast(`${auto ? 'Auto check-in' : 'Checked in'}: ${byId[id].name} 🐍`);
+}
+function leaveBar(){ const cur = currentStop(); if (cur) { cur.out = Date.now(); save(); render(); } }
+function finishNight(){
+  const n = S.night; if (!n) return;
+  const score = snakeScore(n);
+  openSheet(`<h3>Name your snake 🐍</h3><p class="muted small">${n.stops.length} stops, score ${score}. Locking freezes it for good. Upload it and it goes on Top Slither Nights.</p>
+    <label class="f">Snake name<input id="snakeName" value="${esc(n.planName || '')}" placeholder="The Wharf Rat" maxlength="36"></label>
+    <button class="btn primary block" id="lockUpload">Lock it &amp; upload to Top Slither Nights</button>
+    <button class="btn block" id="lockSave">Lock it, keep it to the crew</button>
+    <button class="btn ghost block" data-close>Keep going</button>`);
+  const done = upload => {
+    const name = $('#snakeName').value.trim();
+    const cur = currentStop(); if (cur) cur.out = Date.now();
+    n.endedAt = Date.now(); n.name = name || n.planName || 'Night out'; n.locked = true; n.uploaded = upload; n.score = snakeScore(n);
+    stopGPS(); demoToken++;
+    S.nights.unshift(n); S.night = null; S.recapIndex = 0;
+    save(); closeSheet(); go('recap');
+    toast(upload ? `${n.name} is on the board 🏆` : `${n.name} locked`);
+  };
+  $('#lockUpload').onclick = () => done(true); $('#lockSave').onclick = () => done(false);
+  setTimeout(() => { const i = $('#snakeName'); if (i) i.focus(); }, 50);
+}
+function discardNight(){ stopGPS(); demoToken++; S.night = null; save(); render(); toast('Night discarded'); }
+function pushPos(xy){
+  const n = S.night; if (!n) return;
+  n.you = xy;
+  const last = n.trail[n.trail.length-1];
+  if (!last || Math.hypot(last[0]-xy[0], last[1]-xy[1]) > 4) n.trail.push([xy[0], xy[1], Date.now()]);
+  if (n.trail.length > 1500) n.trail.splice(0, n.trail.length - 1500);
+}
+function autoCheck(xy){
+  const n = S.night; if (!n) return;
+  const cur = currentStop();
+  let best = null, bestD = 1e9;
+  for (const b of BARS){ const d = distM(xy, [b.x, b.y]); if (d < bestD){ bestD = d; best = b; } }
+  if (cur && best && best.id !== cur.id && bestD > 60 && distM(xy, [byId[cur.id].x, byId[cur.id].y]) > 80){ cur.out = Date.now(); save(); render(); }
+  if (best && bestD <= 40 && (!cur || cur.id !== best.id) && Date.now() - n.lastAuto > 90000){ n.lastAuto = Date.now(); checkIn(best.id, true); }
+}
+function startGPS(){
+  if (!('geolocation' in navigator)) { gpsFail('No location on this device.'); return; }
+  try {
+    gpsWatch = navigator.geolocation.watchPosition(pos => {
+      const xy = toXY(pos.coords.latitude, pos.coords.longitude);
+      pushPos(xy); autoCheck(xy); save(); renderLiveMapOnly();
+    }, err => gpsFail(err && err.message ? err.message : 'Location unavailable'), {enableHighAccuracy: true, maximumAge: 5000, timeout: 20000});
+  } catch(e) { gpsFail('Location blocked here.'); }
+}
+function gpsFail(msg){
+  stopGPS();
+  if (S.night && S.night.mode === 'gps'){ S.night.mode = 'manual'; S.night.gpsNote = msg; save(); render(); }
+  toast('Location is off here. Tap a bar to check in.');
+}
+function stopGPS(){ if (gpsWatch != null && navigator.geolocation) { try { navigator.geolocation.clearWatch(gpsWatch); } catch(e){} } gpsWatch = null; }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function runDemo(){
+  const token = ++demoToken;
+  const n = S.night; if (!n) return;
+  let pos = [30, 296];
+  n.you = pos; pushPos(pos);
+  for (const id of n.planIds){
+    if (demoToken !== token || !S.night) return;
+    const b = byId[id]; const from = pos.slice(); const steps = 22;
+    for (let i = 1; i <= steps; i++){
+      if (demoToken !== token || !S.night) return;
+      const t = i / steps; const wob = Math.sin(t * Math.PI * 3) * 6;
+      pos = [from[0] + (b.x - from[0]) * t + wob, from[1] + (b.y - from[1]) * t - wob * .6];
+      pushPos(pos); renderLiveMapOnly();
+      await sleep(110);
+    }
+    pos = [b.x, b.y]; checkIn(id, true);
+    await sleep(1800);
+  }
+  if (S.night && demoToken === token){ S.night.demoDone = true; save(); render(); toast('Demo walk finished. Hit Finish night for the recap.'); }
+}
+function addPhoto(file, barId){
+  const n = S.night; if (!n || !file) return;
+  const url = URL.createObjectURL(file); const img = new Image();
+  img.onload = () => {
+    const max = 720; const sc = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const data = c.toDataURL('image/jpeg', .72);
+    URL.revokeObjectURL(url);
+    let stop = n.stops.find(s => s.id === barId && !s.out) || n.stops.slice().reverse().find(s => s.id === barId);
+    if (!stop) { stop = {id: barId, in: Date.now(), out: Date.now(), photos: []}; n.stops.push(stop); }
+    stop.photos.push({d: data, t: Date.now()});
+    save(); render(); toast('Photo added to ' + byId[barId].name);
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('That image could not be read'); };
+  img.src = url;
+}
+/* ---------- sheet ---------- */
+function openSheet(html){
+  $('#sheetHost').innerHTML = `<div class="sheet-bg" id="sheetBg"><div class="sheet" role="dialog"><div class="handle"></div>${html}</div></div>`;
+  $('#sheetBg').addEventListener('click', e => { if (e.target.id === 'sheetBg' || e.target.closest('[data-close]')) closeSheet(); });
+}
+function closeSheet(){ $('#sheetHost').innerHTML = ''; }
+function openBar(id){
+  const b = byId[id]; const deals = dealsFor(id); const inPlan = S.plan.ids.includes(id); const ig = barIG(id);
+  const cur = currentStop();
+  openSheet(`<div class="row nowrap"><div class="grow"><h3>${esc(b.name)}</h3><p class="muted small">${esc(b.area)} · ${esc(b.vibe)}</p></div>${ig ? `<a class="btn sm" href="https://www.instagram.com/${esc(ig)}/" target="_blank" rel="noopener">@${esc(ig)}</a>` : ''}</div>
+    <div class="chips">${b.tags.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
+    ${deals.length ? `<div class="stack"><span class="eyebrow">Slither deals here</span>${deals.map(d => `<div class="item"><div class="grow"><div class="n">${esc(d.title)}</div><div class="muted small">${esc(d.when || '')}</div></div>${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div>`).join('')}</div>` : `<p class="muted small">No deals posted yet.</p>`}
+    <div class="row">
+      ${inPlan ? `<button class="btn" data-act="remove" data-id="${id}">Remove from Slither</button>` : `<button class="btn primary" data-act="add" data-id="${id}">Add to Slither</button>`}
+      ${S.night && (!cur || cur.id !== id) ? `<button class="btn teal" data-act="checkin" data-id="${id}">I'm here</button>` : ''}
+      ${S.night && cur && cur.id === id ? `<span class="badge live">You're here</span>` : ''}
+    </div>
+    <button class="btn ghost block" data-close>Close</button>`);
+}
+
+/* ---------- renders ---------- */
+function go(tab){ S.tab = tab; save(); render(); $('#main').scrollTop = 0; }
+function render(){
+  document.querySelectorAll('.tab').forEach(t => { t.hidden = t.id !== 'tab-' + S.tab; if (t.hidden) t.innerHTML = ''; });
+  document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
+  const pill = $('#statusPill');
+  if (S.night){ pill.className = 'pill live'; pill.textContent = `Live · ${S.night.stops.length} stop${S.night.stops.length === 1 ? '' : 's'}`; }
+  else if (S.plan.ids.length){ pill.className = 'pill'; pill.textContent = `${S.plan.ids.length} stops planned`; }
+  else { pill.className = 'pill'; pill.textContent = 'Queenstown'; }
+  ({map: renderMap, plan: renderPlan, live: renderLive, deals: renderDeals, recap: renderRecap})[S.tab]();
+  music.updateBtn();
+  clearInterval(tick);
+  if (S.tab === 'live' && S.night) tick = setInterval(() => { const el = $('#elapsed'); if (el) el.textContent = fmtDur(Date.now() - S.night.startedAt); }, 1000);
+}
+function renderLiveMapOnly(){
+  if (S.tab !== 'live' || !S.night) return;
+  const wrap = $('#liveMap'); if (wrap) wrap.innerHTML = mapInner({id: 'liveMap', ids: S.night.planIds, night: S.night, compact: true, legend: 'Teal line is your trail'});
+}
+function renderMap(){
+  const el = $('#tab-map');
+  const planIds = S.night ? S.night.planIds : S.plan.ids;
+  el.innerHTML = `<div class="hero"><h2>Queenstown, tonight.</h2><p class="muted">Tap a bar to see deals or add it to your Slither. Drag to pan.</p></div>
+    ${mapBlock({id: 'mainMap', ids: planIds, night: S.night, legend: 'Pinch or scroll to zoom · drag to pan · tap a bar'})}
+    <div class="row"><div class="chips" id="areaChips">${['All', ...AREAS].map(a => `<button class="chip${S.areaFilter === a ? ' on' : ''}" data-area="${esc(a)}">${esc(a)}</button>`).join('')}</div></div>
+    <div class="list">${BARS.filter(b => S.areaFilter === 'All' || b.area === S.areaFilter).map(b => {
+      const i = planIds.indexOf(b.id); const nd = dealsFor(b.id).length;
+      return `<div class="item" data-open="${b.id}" role="button" tabindex="0">${i >= 0 ? `<span class="num">${i+1}</span>` : ''}<div class="grow"><div class="n">${esc(b.name)}</div><div class="muted small">${esc(b.area)} · ${esc(b.vibe)}</div></div>${nd ? `<span class="badge cat">${nd} deal${nd > 1 ? 's' : ''}</span>` : ''}<button class="btn sm${i >= 0 ? '' : ' primary'}" data-act="${i >= 0 ? 'remove' : 'add'}" data-id="${b.id}" aria-label="${i >= 0 ? 'Remove' : 'Add'}">${i >= 0 ? '−' : '+'}</button></div>`;
+    }).join('')}</div>
+    <p class="tiny muted">Pins are approximate and the map is hand-drawn. Venues can fix their pin when they claim their bar.</p>`;
+}
+function renderPlan(){
+  const el = $('#tab-plan'); const ids = S.plan.ids;
+  const rows = ids.map((id, i) => `<div class="item"><span class="num">${i+1}</span><div class="grow"><div class="n">${esc(byId[id].name)}</div><div class="muted small">${esc(byId[id].area)} · ETA ${fmtClock(S.plan.start, i * STOP_MINUTES)}</div></div>
+      <div class="rowbtns"><button class="btn icon" data-move="-1" data-id="${id}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>↑</button><button class="btn icon" data-move="1" data-id="${id}" aria-label="Move down" ${i === ids.length-1 ? 'disabled' : ''}>↓</button><button class="btn icon" data-act="remove" data-id="${id}" aria-label="Remove">✕</button></div></div>`).join('');
+  const remaining = BARS.filter(b => !ids.includes(b.id) && (S.areaFilter === 'All' || b.area === S.areaFilter));
+  el.innerHTML = `<div class="hero"><h2>Slither your way through town</h2><p class="muted">Pick the bars, set the order, send it to the group chat. ${music.playing ? 'The snake is vibing. 🎵' : 'Add a stop and the snake starts dancing.'}</p></div>
+    <div class="card">
+      <div class="row nowrap"><label class="f grow">Name it<input id="planName" value="${esc(S.plan.name)}" placeholder="Friday send-it" maxlength="40"></label><label class="f" style="width:120px">Kick-off<input id="planStart" type="time" value="${esc(S.plan.start)}"></label></div>
+      ${mapBlock({id: 'planMap', ids, compact: true, legend: ids.length ? `${ids.length} stops · ~${STOP_MINUTES} min each` : 'Add a bar to start the snake'})}
+      ${ids.length ? `<div class="list">${rows}</div>` : `<div class="empty">No stops yet. Add a few below, or tap bars on the map.</div>`}
+      <div class="row">
+        <a class="btn primary grow" id="waPlan" href="${ids.length ? waLink(planText()) : '#'}" target="_blank" rel="noopener" ${ids.length ? '' : 'aria-disabled="true" style="opacity:.45;pointer-events:none"'}>Send to WhatsApp</a>
+        <button class="btn" id="copyPlan" ${ids.length ? '' : 'disabled'}>Copy link</button>
+        <button class="btn ghost" id="clearPlan" ${ids.length ? '' : 'disabled'}>Clear</button>
+      </div>
+    </div>
+    <div class="stack"><h3>Suggested Slithers</h3>
+      <div class="list">${SUGGESTED.map((sg, i) => `<div class="card"><div class="row nowrap"><div class="grow"><h3>${esc(sg.name)}</h3><p class="muted small">${sg.ids.map(id => esc(byId[id].name)).join(' → ')}</p></div><span class="num">${sg.ids.length}</span></div><p class="small">${esc(sg.blurb)}</p><button class="btn teal" data-suggest="${i}">Load this Slither</button></div>`).join('')}</div>
+    </div>
+    <div class="stack"><div class="row"><h3 class="grow">Add stops</h3></div>
+      <div class="chips">${['All', ...AREAS].map(a => `<button class="chip${S.areaFilter === a ? ' on' : ''}" data-area="${esc(a)}">${esc(a)}</button>`).join('')}</div>
+      <div class="list">${remaining.map(b => `<div class="item"><div class="grow"><div class="n">${esc(b.name)}</div><div class="muted small">${esc(b.area)} · ${esc(b.vibe)}</div></div><button class="btn sm primary" data-act="add" data-id="${b.id}">+ Add</button></div>`).join('') || '<div class="empty">Everything here is already on the Slither.</div>'}</div>
+    </div>`;
+  $('#planName').oninput = e => { S.plan.name = e.target.value; save(); refreshPlanLinks(); };
+  $('#planStart').onchange = e => { S.plan.start = e.target.value || '20:00'; save(); render(); };
+  $('#copyPlan').onclick = async () => { try { await navigator.clipboard.writeText(planText()); toast('Plan copied. Paste it anywhere.'); } catch(e) { openSheet(`<h3>Copy your Slither</h3><div class="cap">${esc(planText()).replace(/\n/g, '<br>')}</div><button class="btn ghost block" data-close>Done</button>`); } };
+  $('#clearPlan').onclick = () => openSheet(`<h3>Clear the plan?</h3><p class="muted small">Removes all ${ids.length} stops.</p><div class="row"><button class="btn danger" id="yesClear">Clear it</button><button class="btn ghost" data-close>Keep it</button></div>`) || ($('#yesClear').onclick = () => { S.plan = {name: '', ids: [], start: S.plan.start}; music.stop(); save(); closeSheet(); render(); });
+}
+function refreshPlanLinks(){ const a = $('#waPlan'); if (a && S.plan.ids.length) a.href = waLink(planText()); }
+function renderLive(){
+  const el = $('#tab-live'); const n = S.night;
+  if (!n){
+    const ids = S.plan.ids;
+    el.innerHTML = `<div class="hero"><h2>Ready to Slither?</h2><p class="muted">Start the night and Slither keeps the trail: where you went, when, and the photos from each stop.</p></div>
+      <div class="card">
+        ${ids.length ? `<span class="eyebrow">Tonight's plan</span><div class="list">${ids.map((id, i) => `<div class="item"><span class="num">${i+1}</span><span class="n grow">${esc(byId[id].name)}</span><span class="ts">${fmtClock(S.plan.start, i * STOP_MINUTES)}</span></div>`).join('')}</div>` : `<p class="muted small">No plan yet. You can still start and check in as you go, or build one under Plan.</p>`}
+        <button class="btn primary block" id="startGps">Start with live location</button>
+        <button class="btn block" id="startManual">Start, I'll tap bars as I go</button>
+        <button class="btn ghost block" id="startDemo">Demo walk (watch the snake grow)</button>
+        <p class="tiny muted">Live location only works when Slither is opened from a normal web address, not inside this preview. If it can't get a fix it falls back to tap check-ins.</p>
+      </div>
+      ${S.nights.length ? `<p class="muted small">Last night out: ${esc(fmtDate(S.nights[0].startedAt))}, ${S.nights[0].stops.length} stops. See Recap.</p>` : ''}`;
+    $('#startGps').onclick = () => startNight('gps');
+    $('#startManual').onclick = () => startNight('manual');
+    $('#startDemo').onclick = () => { if (S.plan.ids.length < 2){ S.plan.ids = ['perkys', 'smiths', 'winnies', 'zephyr', 'bunker']; S.plan.name = S.plan.name || 'Demo send-it'; save(); } startNight('demo'); };
+    return;
+  }
+  const cur = currentStop(); const next = n.planIds.find(id => !n.stops.some(s => s.id === id));
+  const modeLabel = {gps: 'Live location', manual: 'Tap check-ins', demo: 'Demo walk'}[n.mode];
+  el.innerHTML = `<div class="row nowrap"><div class="grow"><h2>${esc(n.planName || 'Tonight')}</h2><p class="muted small">${modeLabel} · started ${fmtTime(n.startedAt)}${n.gpsNote ? ' · ' + esc(n.gpsNote) : ''}</p></div><div class="stat"><b id="elapsed">${fmtDur(Date.now() - n.startedAt)}</b><span>on the go</span></div></div>
+    <div class="card hot">
+      ${cur ? `<div class="row nowrap"><span class="num now">${n.stops.length}</span><div class="grow"><div class="eyebrow">You're at</div><h3>${esc(byId[cur.id].name)}</h3><p class="muted small">since ${fmtTime(cur.in)}</p></div></div>` : `<div class="row nowrap"><span class="num">${n.stops.length + 1}</span><div class="grow"><div class="eyebrow">Between bars</div><h3>${next ? 'Next up: ' + esc(byId[next].name) : 'Where to?'}</h3></div></div>`}
+      <div class="row">
+        <button class="btn teal" id="checkinBtn">${cur ? 'Move on to…' : 'Check in'}</button>
+        ${cur ? `<a class="btn primary" id="igBtn" href="https://www.instagram.com/${barIG(cur.id) ? esc(barIG(cur.id)) + '/' : ''}" target="_blank" rel="noopener">📷 Snap &amp; tag on Instagram</a><label class="btn" for="photoIn">🖼 Add to recap</label><input class="file" id="photoIn" type="file" accept="image/*">` : ''}
+        ${cur ? `<button class="btn ghost sm" id="leaveBtn">Left ${esc(byId[cur.id].name)}</button>` : ''}
+      </div>
+    </div>
+    ${n.nudge ? `<div class="card water"><div class="row nowrap"><div class="grow"><h3>💧 Water between bars</h3><p class="small">A glass of water every stop keeps the night long. Waters so far: <b>${n.waters}</b>.</p></div><button class="btn sm" id="waterBtn">Had one</button></div></div>` : ''}
+    ${mapBlock({id: 'liveMap', ids: n.planIds, night: n, compact: true, legend: 'Teal line is your trail'})}
+    <div class="stack"><h3>Stops so far</h3>
+      ${n.stops.length ? `<div class="list">${n.stops.map((s, i) => `<div class="stack"><div class="item"><span class="num ${s.out ? 'done' : 'now'}">${i+1}</span><div class="grow"><div class="n">${esc(byId[s.id].name)}</div><div class="muted small">${fmtTime(s.in)}${s.out ? ' → ' + fmtTime(s.out) + ' · ' + fmtDur(s.out - s.in) : ' · now'}</div></div>${s.photos.length ? `<span class="badge">${s.photos.length} 📸</span>` : ''}</div>
+        ${s.photos.length ? `<div class="photos">${s.photos.map((p, j) => `<div class="ph"><img src="${p.d}" alt="Photo at ${esc(byId[s.id].name)}"></div>`).join('')}</div>` : ''}</div>`).join('')}</div>` : `<div class="empty">No check-ins yet. ${n.mode === 'gps' ? 'Walk into a bar and Slither will notice, or tap Check in.' : 'Tap Check in when you arrive somewhere.'}</div>`}
+    </div>
+    <div class="row"><button class="btn primary grow" id="finishBtn">Finish &amp; name the snake</button><button class="btn ghost" id="discardBtn">Discard</button></div>`;
+  $('#checkinBtn').onclick = () => {
+    const ordered = [...n.planIds.filter(id => !n.stops.some(s => s.id === id)), ...BARS.map(b => b.id).filter(id => !n.planIds.includes(id))];
+    openSheet(`<h3>Where are you?</h3><div class="list">${ordered.map(id => `<div class="item" data-ci="${id}" role="button" tabindex="0"><div class="grow"><div class="n">${esc(byId[id].name)}</div><div class="muted small">${esc(byId[id].area)}${n.planIds.includes(id) ? ' · on the plan' : ''}</div></div>${n.planIds.includes(id) ? `<span class="num">${n.planIds.indexOf(id)+1}</span>` : ''}</div>`).join('')}</div>`);
+  };
+  if (cur){
+    $('#photoIn').onchange = e => { const f = e.target.files && e.target.files[0]; if (f) addPhoto(f, cur.id); };
+    $('#leaveBtn').onclick = leaveBar;
+    $('#igBtn').onclick = () => {
+      const ig = barIG(cur.id); const tag = (ig ? '@' + ig : '#' + byId[cur.id].name.replace(/[^A-Za-z0-9]/g, '')) + ' #SlitherQT';
+      try { navigator.clipboard.writeText(tag).then(() => toast('Tag copied: ' + tag), () => toast('Tag the bar: ' + tag)); } catch(e) { toast('Tag the bar: ' + tag); }
+    };
+  }
+  const wb = $('#waterBtn'); if (wb) wb.onclick = () => { n.waters++; n.nudge = false; save(); render(); toast('Nice. Hydrated 💧'); };
+  $('#finishBtn').onclick = finishNight;
+  $('#discardBtn').onclick = () => openSheet(`<h3>Discard tonight?</h3><p class="muted small">Trail, check-ins and photos from tonight will be deleted.</p><div class="row"><button class="btn danger" id="yesDiscard">Discard</button><button class="btn ghost" data-close>Keep it</button></div>`) || ($('#yesDiscard').onclick = () => { closeSheet(); discardNight(); });
+}
+function renderDeals(){
+  const el = $('#tab-deals'); const f = S.dealFilter;
+  const deals = allDeals().filter(d => f === 'All' || d.cat === f);
+  el.innerHTML = `<div class="hero"><h2>Slither Deals</h2><p class="muted">Bars put something on the table to pull your crew their way. Show the deal on your phone at the bar.</p></div>
+    <div class="chips">${['All', ...DEAL_CATS].map(c => `<button class="chip${f === c ? ' on' : ''}" data-deal-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <div class="list">${deals.map(d => { const b = byId[d.bar]; const inPlan = S.plan.ids.includes(d.bar); return `<div class="card">
+        <div class="row nowrap"><div class="grow"><div class="eyebrow">${esc(b.name)} · ${esc(b.area)}</div><h3>${esc(d.title)}</h3></div>${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div>
+        <p class="small">${esc(d.detail)}</p>
+        <div class="row"><span class="badge cat">${esc(d.cat)}</span><span class="muted small">${esc(d.when || '')}</span></div>
+        <div class="row"><button class="btn sm primary" data-show-deal="${d.id}">Show at the bar</button><button class="btn sm" data-act="${inPlan ? 'remove' : 'add'}" data-id="${d.bar}">${inPlan ? 'On the Slither ✓' : '+ Add bar to Slither'}</button>${d.custom ? `<button class="btn sm ghost" data-del-deal="${d.id}">Delete</button>` : ''}</div>
+      </div>`; }).join('') || '<div class="empty">No deals in that category yet.</div>'}</div>
+    <div class="card"><h3>Run a bar in Queenstown?</h3><p class="small muted">Claim your venue, set your Instagram handle so Slither photos tag you, and post a deal that brings crews through the door.</p>
+      <button class="btn teal block" id="claimBtn">Claim your bar and post a deal</button>
+      <details><summary>What a Slither Deal can and can't be</summary><p class="small muted">Deals must stay inside the Sale and Supply of Alcohol Act 2012 (s237, irresponsible promotion). That rules out free alcohol, alcohol discounted 25% or more when advertised off-premise (this app counts as off-premise), anything that encourages rapid or excessive drinking, and promotions aimed at minors. Food, entry, skip-the-queue, live music, non-alcoholic drinks and experiences are all fair game, and they're what pulls a crew anyway.</p></details>
+    </div>`;
+  $('#claimBtn').onclick = openClaim;
+}
+function openClaim(){
+  openSheet(`<h3>Claim your bar</h3><p class="muted small">Prototype: this saves on this phone only. The real version has venue logins.</p>
+    <label class="f">Venue<select id="cBar">${BARS.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></label>
+    <label class="f">Instagram handle<input id="cIg" placeholder="yourbar_qt" maxlength="40"></label>
+    <hr>
+    <span class="eyebrow">Your first deal</span>
+    <label class="f">Headline<input id="cTitle" placeholder="Free fries with your first round" maxlength="60"></label>
+    <label class="f">Details<textarea id="cDetail" rows="2" placeholder="Show the app at the bar. One per crew." maxlength="160"></textarea></label>
+    <div class="row nowrap"><label class="f grow">Category<select id="cCat">${DEAL_CATS.map(c => `<option>${esc(c)}</option>`).join('')}</select></label><label class="f grow">When<input id="cWhen" placeholder="Fri–Sat, 8–10pm" maxlength="30"></label></div>
+    <label class="chk"><input type="checkbox" id="cOk1"><span>No free alcohol, no alcohol discounted 25% or more.</span></label>
+    <label class="chk"><input type="checkbox" id="cOk2"><span>Nothing that encourages rapid or excessive drinking.</span></label>
+    <p class="tiny muted" id="cErr"></p>
+    <button class="btn primary block" id="cSave">Post deal</button>
+    <button class="btn ghost block" data-close>Cancel</button>`);
+  const sel = $('#cBar'); sel.onchange = () => { $('#cIg').value = barIG(sel.value); }; sel.onchange();
+  $('#cSave').onclick = () => {
+    const bar = sel.value, title = $('#cTitle').value.trim(), detail = $('#cDetail').value.trim();
+    const ig = $('#cIg').value.trim().replace(/^@/, '');
+    const err = $('#cErr');
+    if (!title) return err.textContent = 'Give the deal a headline.';
+    if (/\b(free (shot|shots|beer|beers|wine|drink|drinks|pint|pints|cocktail|cocktails|bubbles|champagne))|2 ?for ?1|two for one|half[- ]price (drink|beer|wine|cocktail)|all you can drink|bottomless|happy hour/i.test(title + ' ' + detail)) return err.textContent = 'That reads like a free or heavily discounted alcohol promo, which the Act does not allow off-premise. Try food, entry, music or non-alcoholic.';
+    if (!$('#cOk1').checked || !$('#cOk2').checked) return err.textContent = 'Tick both responsible-promotion boxes to post.';
+    S.venues[bar] = Object.assign(S.venues[bar] || {}, {ig, claimedAt: Date.now()});
+    S.deals.unshift({id: 'c' + Date.now(), bar, title, detail, cat: $('#cCat').value, when: $('#cWhen').value.trim(), custom: true});
+    save(); closeSheet(); render(); toast(`Deal live at ${byId[bar].name}`);
+  };
+}
+function showDeal(id){
+  const d = allDeals().find(x => x.id === id); if (!d) return; const b = byId[d.bar];
+  const code = 'SLTHR-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  openSheet(`<div class="eyebrow">${esc(b.name)}</div><h3>${esc(d.title)}</h3><p class="small muted">${esc(d.detail)}</p>
+    <div class="code">${code}</div>
+    <p class="tiny muted" style="text-align:center">Show this screen to staff. ${d.example ? 'This is an example deal for the prototype, so don\'t actually expect free fries.' : 'One per crew unless the venue says otherwise.'}</p>
+    ${b.id && !S.plan.ids.includes(b.id) ? `<button class="btn block" data-act="add" data-id="${b.id}">Add ${esc(b.name)} to the Slither</button>` : ''}
+    <button class="btn ghost block" data-close>Close</button>`);
+}
+const DAY = 86400000;
+const SEED_TOP = [
+  {name:'The Wharf Rat', crew:'Sam + 5', stops:7, km:2.4, score:1010, date:Date.now() - DAY*9, example:true},
+  {name:'Searle Lane Sendy', crew:'Tess & Jonno', stops:6, km:1.8, score:880, date:Date.now() - DAY*16, example:true},
+  {name:'Lakefront Loop', crew:'The Fernhill lot', stops:4, km:2.9, score:620, date:Date.now() - DAY*3, example:true},
+  {name:'Two Bars, No Regrets', crew:'Mel', stops:2, km:.6, score:270, date:Date.now() - DAY*30, example:true},
+];
+function nightStats(n){ const end = n.endedAt || Date.now(); let dist = 0; for (let i = 1; i < n.trail.length; i++) dist += distM(n.trail[i-1], n.trail[i]); const photos = n.stops.reduce((a, s) => a + s.photos.length, 0); return {stops: n.stops.length, ms: end - n.startedAt, km: dist/1000, photos, waters: n.waters}; }
+function snakeScore(n){ const s = nightStats(n); return Math.round(s.stops*100 + s.km*40 + s.photos*15 + s.waters*25 + (s.stops >= 5 ? 150 : 0)); }
+function board(){ const mine = S.nights.filter(n => n.uploaded).map(n => ({name: n.name, crew: 'You', stops: n.stops.length, km: nightStats(n).km, score: n.score || snakeScore(n), date: n.startedAt, mine: true, id: n.startedAt})); return [...SEED_TOP, ...mine].sort((a, b) => b.score - a.score); }
+function boardHTML(){
+  const rows = board().slice(0, 8);
+  return `<div class="card"><div class="row nowrap"><h3 class="grow">🏆 Top Slither Nights</h3><span class="badge">Queenstown</span></div>
+    <div class="list">${rows.map((r, i) => `<div class="item${r.mine ? ' mine' : ''}"><span class="rank">${i+1}</span><div class="grow"><div class="n">${esc(r.name)} ${r.example ? '<span class="badge ex">Example</span>' : ''}</div><div class="muted small">${esc(r.crew)} · ${r.stops} stops · ${r.km.toFixed(1)} km · ${esc(fmtDate(r.date))}</div></div><b class="score">${r.score}</b></div>`).join('')}</div>
+    <p class="tiny muted">Score: 100 a stop, 40 a km, 25 a water, 15 a photo, +150 for a 5-stop snake. Example rows sit here until the shared board is live.</p></div>`;
+}
+function renderRecap(){
+  const el = $('#tab-recap');
+  const list = S.nights; const live = S.night;
+  if (!list.length && !live){
+    el.innerHTML = `<div class="hero"><h2>Your nights, remembered.</h2><p class="muted">Finish a night under Tonight, name the snake, lock it, and it lands here and on the board.</p></div>${boardHTML()}<div class="empty">No snakes of your own yet. Try the Demo walk under Tonight.</div>`;
+    return;
+  }
+  const idx = Math.min(S.recapIndex || 0, Math.max(0, list.length - 1));
+  const n = list[idx] || live;
+  const st = nightStats(n); const score = n.locked ? (n.score || snakeScore(n)) : snakeScore(n);
+  const rank = n.uploaded ? board().findIndex(r => r.id === n.startedAt) + 1 : 0;
+  const title = n.name || n.planName || 'Night out';
+  const recapText = `🐍 ${title}${rank ? ` · #${rank} on Top Slither Nights` : ''}\n${n.stops.map((s, i) => `${i+1}. ${byId[s.id].name} ${fmtTime(s.in)}`).join('\n')}\n${fmtDur(st.ms)} out · ${st.km.toFixed(1)} km walked · ${st.photos} photos · score ${score}\nMade with Slither`;
+  el.innerHTML = `<div class="hero"><div class="row nowrap"><h2 class="grow">${esc(title)}</h2>${n.locked ? '<span class="badge">🔒 Locked</span>' : '<span class="badge live">In progress</span>'}</div><p class="muted">${esc(fmtDate(n.startedAt))} · ${fmtTime(n.startedAt)} to ${n.endedAt ? fmtTime(n.endedAt) : 'now'}${rank ? ` · #${rank} on the board` : ''}</p></div>
+    ${list.length > 1 ? `<div class="chips">${list.map((x, i) => `<button class="chip${i === idx ? ' on' : ''}" data-recap="${i}">${esc(x.name || fmtDate(x.startedAt))}</button>`).join('')}</div>` : ''}
+    <div class="stats"><div class="stat"><b>${score}</b><span>score</span></div><div class="stat"><b>${st.stops}</b><span>stops</span></div><div class="stat"><b>${st.km.toFixed(1)}</b><span>km walked</span></div><div class="stat"><b>${fmtDur(st.ms)}</b><span>out</span></div></div>
+    ${mapBlock({ids: n.planIds, night: n, compact: true, legend: 'The snake you made'})}
+    ${n.locked && !n.uploaded ? `<button class="btn teal block" id="uploadBtn">Upload to Top Slither Nights</button>` : ''}
+    <div class="row"><a class="btn primary grow" href="${waLink(recapText)}" target="_blank" rel="noopener">Share recap on WhatsApp</a>${n !== live ? `<button class="btn ghost" id="delNight">Delete</button>` : ''}</div>
+    <div class="stack"><h3>The night</h3><div class="list">${n.stops.map((s, i) => `<div class="stack"><div class="item"><span class="num done">${i+1}</span><div class="grow"><div class="n">${esc(byId[s.id].name)}</div><div class="muted small">${fmtTime(s.in)}${s.out ? ' → ' + fmtTime(s.out) + ' · ' + fmtDur(s.out - s.in) : ''}</div></div></div>
+      ${s.photos.length ? `<div class="photos">${s.photos.map(p => `<div class="ph"><img src="${p.d}" alt="Photo at ${esc(byId[s.id].name)}"></div>`).join('')}</div>` : ''}</div>`).join('') || '<div class="empty">No check-ins on this one.</div>'}</div></div>
+    ${boardHTML()}
+    <div class="card"><h3>Get home safe</h3><p class="small muted">Queenstown's small. Walk with your crew, or grab a ride.</p><div class="row"><a class="btn sm" href="https://m.uber.com/" target="_blank" rel="noopener">Uber ↗</a><a class="btn sm" href="https://www.orc.govt.nz/public-transport/queenstown-buses" target="_blank" rel="noopener">Orbus timetable ↗</a></div></div>`;
+  const up = $('#uploadBtn'); if (up) up.onclick = () => { n.uploaded = true; n.score = n.score || snakeScore(n); save(); render(); toast(`${title} is on the board 🏆`); };
+  const del = $('#delNight'); if (del) del.onclick = () => openSheet(`<h3>Delete this snake?</h3><p class="muted small">Photos go with it, and it comes off the board.</p><div class="row"><button class="btn danger" id="yesDel">Delete</button><button class="btn ghost" data-close>Keep</button></div>`) || ($('#yesDel').onclick = () => { S.nights.splice(idx, 1); S.recapIndex = 0; save(); closeSheet(); render(); });
+}
+
+/* ---------- global click delegation ---------- */
+document.addEventListener('click', e => {
+  if (suppressClick) return;
+  const t = e.target.closest('[data-tab],[data-zoom],[data-bar],[data-open],[data-act],[data-move],[data-area],[data-deal-cat],[data-show-deal],[data-del-deal],[data-ci],[data-recap],[data-suggest]');
+  if (!t) return;
+  const d = t.dataset;
+  if (d.tab) return go(d.tab);
+  if (d.zoom) return zoomAt(t.closest('.mapwrap').id, d.zoom === 'in' ? 0.65 : 1.5);
+  if (d.bar) return openBar(d.bar);
+  if (d.open) { if (e.target.closest('[data-act]')) return; return openBar(d.open); }
+  if (d.act === 'add') { closeSheet(); return addToPlan(d.id); }
+  if (d.act === 'remove') { closeSheet(); return removeFromPlan(d.id); }
+  if (d.act === 'checkin') { closeSheet(); return checkIn(d.id); }
+  if (d.suggest !== undefined) { const sg = SUGGESTED[Number(d.suggest)]; S.plan.ids = sg.ids.slice(); S.plan.name = sg.name; save(); if (S.music !== false) music.start(); render(); winkAll(); $("#main").scrollTop = 0; return toast(`${sg.name} loaded 😉`); }
+  if (d.move) return movePlan(d.id, Number(d.move));
+  if (d.area) { S.areaFilter = d.area; save(); return render(); }
+  if (d.dealCat) { S.dealFilter = d.dealCat; save(); return render(); }
+  if (d.showDeal) return showDeal(d.showDeal);
+  if (d.delDeal) { S.deals = S.deals.filter(x => x.id !== d.delDeal); save(); return render(); }
+  if (d.ci) { closeSheet(); return checkIn(d.ci); }
+  if (d.recap !== undefined) { S.recapIndex = Number(d.recap); save(); return render(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); if (e.key === 'Enter' && e.target.matches('[data-open],[data-ci]')) e.target.click(); });
+window.addEventListener('hashchange', offerIncomingPlan);
+$('#musicBtn').onclick = () => { if (music.playing){ music.stop(); S.music = false; toast('Music off'); } else { S.music = true; music.start(); toast(music.playing ? 'Snake is vibing 🎵' : 'Audio is blocked here'); } save(); };
+
+/* ---------- boot ---------- */
+if (S.night && S.night.mode === 'gps') startGPS();
+if (S.night && S.night.mode === 'demo' && !S.night.demoDone) { S.night.mode = 'manual'; save(); }
+render();
+offerIncomingPlan();
+})();
+</script>
+</body>
+</html>
