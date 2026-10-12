@@ -79,6 +79,8 @@ label.chk input{width:18px;height:18px;margin:2px 0 0;flex:none;accent-color:var
 .badge.ex{color:var(--warn);border-color:var(--warn)}
 .badge.live{color:var(--good);border-color:var(--good)}
 .badge.cat{color:var(--teal);border-color:var(--teal)}
+.badge.star{color:#ffd84d;border-color:#ffd84d;background:rgba(255,216,77,.1)}
+.star{fill:#ffd84d;stroke:#7a5a00;stroke-width:.8;pointer-events:none}
 .list{display:flex;flex-direction:column;gap:8px}
 .item{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
 .item .n{font-weight:600}
@@ -219,15 +221,15 @@ const BARS = [
   {id:'vinyl',            name:'Vinyl Underground', area:'Cow Lane',     x:282, y:254, vibe:'Basement, records, sweat', tags:['dancefloor','late']},
   {id:'ballarat',         name:'The Ballarat',     area:'The Mall',      x:292, y:310, vibe:'Old-school pub on the Mall', tags:['food','live music']},
   {id:'winnies',          name:'Winnies',          area:'The Mall',      x:312, y:286, vibe:'Pizza, then the roof opens', tags:['food','dancefloor','late']},
-  {id:'bardeaux',         name:'Bardeaux',         area:'The Mall',      x:328, y:268, vibe:'Wine, fire, low light', tags:['cocktails']},
+  {id:'bardeaux',         name:'Bardeaux',         area:'The Mall',      x:328, y:268, vibe:'Wine, fire, low light', tags:['cocktails'], star:'Must visit'},
   {id:'eichardts',        name:"Eichardt's Bar",   area:'Marine Parade', x:296, y:356, vibe:'Classy lakefront', tags:['cocktails','lake']},
   {id:'zephyr',           name:'Zephyr',           area:'Searle Lane',   x:338, y:308, vibe:'Rock bar, pool, late', tags:['pool','late','live music']},
   {id:'searle-lane',      name:'Searle Lane',      area:'Searle Lane',   x:352, y:290, vibe:'Courtyard bar', tags:['cocktails','food']},
-  {id:'barmuda',          name:'Barmuda',          area:'Searle Lane',   x:362, y:278, vibe:'Cocktails and shisha', tags:['cocktails','late']},
+  {id:'barmuda',          name:'Barmuda',          area:'Searle Lane',   x:362, y:278, vibe:'Cocktails and shisha', tags:['cocktails','late'], star:'Top bar'},
   {id:'cowboys',          name:'Cowboys',          area:'Searle Lane',   x:374, y:264, vibe:'Bull-riding and boots', tags:['dancefloor','late']},
   {id:'yonder',           name:'Yonder',           area:'Church St',     x:372, y:322, vibe:'Good food, live sets', tags:['food','live music']},
   {id:'1876',             name:'1876',             area:'Village Green', x:404, y:178, vibe:'Sunny garden bar', tags:['food','pool']},
-  {id:'lucky-lukes',      name:'Lucky Lukes',      area:'The Mall',      x:322, y:300, vibe:'Good luck getting out early', tags:['late','dancefloor']},
+  {id:'lucky-lukes',      name:'Lucky Lukes',      area:'The Mall',      x:322, y:300, vibe:'Good luck getting out early', tags:['late','dancefloor'], star:'Recommended'},
   {id:'soho',             name:'Soho',             area:'Church St',     x:388, y:296, vibe:'Late, loud, lovely', tags:['late','cocktails']},
   {id:'the-club',         name:'The Club',         area:'Cow Lane',      x:298, y:248, vibe:'Where the night ends', tags:['dancefloor','late']},
 ];
@@ -236,6 +238,9 @@ const SUGGESTED = [
   {name:'Blair Stitch Project', ids:['lucky-lukes','barmuda','bardeaux','the-club'], blurb:'Start loud, settle in, finish on the dancefloor.'},
 ];
 const byId = Object.fromEntries(BARS.map(b => [b.id, b]));
+const starBadge = b => b.star ? ` <span class="badge star">★ ${esc(b.star)}</span>` : '';
+const sortStar = arr => [...arr].sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
+const starSVG = (x, y) => `<path class="star" transform="translate(${x},${y})" d="M0,-5.2 L1.5,-1.6 L5.3,-1.6 L2.3,0.8 L3.3,4.6 L0,2.4 L-3.3,4.6 L-2.3,0.8 L-5.3,-1.6 L-1.5,-1.6 Z"/>`;
 const AREAS = [...new Set(BARS.map(b => b.area))];
 
 const STREETS = [
@@ -441,6 +446,7 @@ function mapSVG(o){
     s += `<circle class="dot" cx="${b.x}" cy="${b.y}" r="${r}"/>`;
     if (i >= 0) s += `<text class="num" x="${b.x}" y="${b.y + 3.3}">${i+1}</text>`;
     if (show) s += `<text x="${b.x + r + 3}" y="${b.y + 3}">${esc(b.name)}</text>`;
+    if (b.star) s += starSVG(b.x - r - 1, b.y - r - 1);
     s += `</g>`;
   }
   s += head;
@@ -731,7 +737,7 @@ function closeSheet(){ $('#sheetHost').innerHTML = ''; }
 function openBar(id){
   const b = byId[id]; const deals = dealsFor(id); const inPlan = S.plan.ids.includes(id); const ig = barIG(id);
   const cur = currentStop();
-  openSheet(`<div class="row nowrap"><div class="grow"><h3>${esc(b.name)}</h3><p class="muted small">${esc(b.area)} · ${esc(b.vibe)}</p></div>${ig ? `<a class="btn sm" href="https://www.instagram.com/${esc(ig)}/" target="_blank" rel="noopener">@${esc(ig)}</a>` : ''}</div>
+  openSheet(`<div class="row nowrap"><div class="grow"><h3>${esc(b.name)}</h3>${b.star ? `<div><span class="badge star">★ ${esc(b.star)}</span></div>` : ''}<p class="muted small">${esc(b.area)} · ${esc(b.vibe)}</p></div>${ig ? `<a class="btn sm" href="https://www.instagram.com/${esc(ig)}/" target="_blank" rel="noopener">@${esc(ig)}</a>` : ''}</div>
     <div class="chips">${b.tags.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
     ${deals.length ? `<div class="stack"><span class="eyebrow">Slither deals here</span>${deals.map(d => `<div class="item"><div class="grow"><div class="n">${esc(d.title)}</div><div class="muted small">${esc(d.when || '')}</div></div>${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div>`).join('')}</div>` : `<p class="muted small">No deals posted yet.</p>`}
     <div class="row">
@@ -766,9 +772,9 @@ function renderMap(){
   el.innerHTML = `<div class="hero"><h2>Queenstown, tonight.</h2><p class="muted">Tap a bar to see deals or add it to your Slither. Drag to pan.</p></div>
     ${mapBlock({id: 'mainMap', ids: planIds, night: S.night, legend: 'Pinch or scroll to zoom · drag to pan · tap a bar'})}
     <div class="row"><div class="chips" id="areaChips">${['All', ...AREAS].map(a => `<button class="chip${S.areaFilter === a ? ' on' : ''}" data-area="${esc(a)}">${esc(a)}</button>`).join('')}</div></div>
-    <div class="list">${BARS.filter(b => S.areaFilter === 'All' || b.area === S.areaFilter).map(b => {
+    <div class="list">${sortStar(BARS).filter(b => S.areaFilter === 'All' || b.area === S.areaFilter).map(b => {
       const i = planIds.indexOf(b.id); const nd = dealsFor(b.id).length;
-      return `<div class="item" data-open="${b.id}" role="button" tabindex="0">${i >= 0 ? `<span class="num">${i+1}</span>` : ''}<div class="grow"><div class="n">${esc(b.name)}</div><div class="muted small">${esc(b.area)} · ${esc(b.vibe)}</div></div>${nd ? `<span class="badge cat">${nd} deal${nd > 1 ? 's' : ''}</span>` : ''}<button class="btn sm${i >= 0 ? '' : ' primary'}" data-act="${i >= 0 ? 'remove' : 'add'}" data-id="${b.id}" aria-label="${i >= 0 ? 'Remove' : 'Add'}">${i >= 0 ? '−' : '+'}</button></div>`;
+      return `<div class="item" data-open="${b.id}" role="button" tabindex="0">${i >= 0 ? `<span class="num">${i+1}</span>` : ''}<div class="grow"><div class="n">${esc(b.name)}${starBadge(b)}</div><div class="muted small">${esc(b.area)} · ${esc(b.vibe)}</div></div>${nd ? `<span class="badge cat">${nd} deal${nd > 1 ? 's' : ''}</span>` : ''}<button class="btn sm${i >= 0 ? '' : ' primary'}" data-act="${i >= 0 ? 'remove' : 'add'}" data-id="${b.id}" aria-label="${i >= 0 ? 'Remove' : 'Add'}">${i >= 0 ? '−' : '+'}</button></div>`;
     }).join('')}</div>
     <p class="tiny muted">Pins are approximate and the map is hand-drawn. Venues can fix their pin when they claim their bar.</p>`;
 }
@@ -776,7 +782,7 @@ function renderPlan(){
   const el = $('#tab-plan'); const ids = S.plan.ids;
   const rows = ids.map((id, i) => `<div class="item"><span class="num">${i+1}</span><div class="grow"><div class="n">${esc(byId[id].name)}</div><div class="muted small">${esc(byId[id].area)} · ETA ${fmtClock(S.plan.start, i * STOP_MINUTES)}</div></div>
       <div class="rowbtns"><button class="btn icon" data-move="-1" data-id="${id}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>↑</button><button class="btn icon" data-move="1" data-id="${id}" aria-label="Move down" ${i === ids.length-1 ? 'disabled' : ''}>↓</button><button class="btn icon" data-act="remove" data-id="${id}" aria-label="Remove">✕</button></div></div>`).join('');
-  const remaining = BARS.filter(b => !ids.includes(b.id) && (S.areaFilter === 'All' || b.area === S.areaFilter));
+  const remaining = sortStar(BARS).filter(b => !ids.includes(b.id) && (S.areaFilter === 'All' || b.area === S.areaFilter));
   el.innerHTML = `<div class="hero"><h2>Slither your way through town</h2><p class="muted">Pick the bars, set the order, send it to the group chat. ${music.playing ? 'The snake is vibing. 🎵' : 'Add a stop and the snake starts dancing.'}</p></div>
     <div class="card">
       <div class="row nowrap"><label class="f grow">Name it<input id="planName" value="${esc(S.plan.name)}" placeholder="Friday send-it" maxlength="40"></label><label class="f" style="width:120px">Kick-off<input id="planStart" type="time" value="${esc(S.plan.start)}"></label></div>
@@ -789,11 +795,11 @@ function renderPlan(){
       </div>
     </div>
     <div class="stack"><h3>Suggested Slithers</h3>
-      <div class="list">${SUGGESTED.map((sg, i) => `<div class="card"><div class="row nowrap"><div class="grow"><h3>${esc(sg.name)}</h3><p class="muted small">${sg.ids.map(id => esc(byId[id].name)).join(' → ')}</p></div><span class="num">${sg.ids.length}</span></div><p class="small">${esc(sg.blurb)}</p><button class="btn teal" data-suggest="${i}">Load this Slither</button></div>`).join('')}</div>
+      <div class="list">${SUGGESTED.map((sg, i) => `<div class="card"><div class="row nowrap"><div class="grow"><h3>${esc(sg.name)}</h3><p class="muted small">${sg.ids.map(id => esc(byId[id].name) + (byId[id].star ? ' ★' : '')).join(' → ')}</p></div><span class="num">${sg.ids.length}</span></div><p class="small">${esc(sg.blurb)}</p><button class="btn teal" data-suggest="${i}">Load this Slither</button></div>`).join('')}</div>
     </div>
     <div class="stack"><div class="row"><h3 class="grow">Add stops</h3></div>
       <div class="chips">${['All', ...AREAS].map(a => `<button class="chip${S.areaFilter === a ? ' on' : ''}" data-area="${esc(a)}">${esc(a)}</button>`).join('')}</div>
-      <div class="list">${remaining.map(b => `<div class="item"><div class="grow"><div class="n">${esc(b.name)}</div><div class="muted small">${esc(b.area)} · ${esc(b.vibe)}</div></div><button class="btn sm primary" data-act="add" data-id="${b.id}">+ Add</button></div>`).join('') || '<div class="empty">Everything here is already on the Slither.</div>'}</div>
+      <div class="list">${remaining.map(b => `<div class="item"><div class="grow"><div class="n">${esc(b.name)}${starBadge(b)}</div><div class="muted small">${esc(b.area)} · ${esc(b.vibe)}</div></div><button class="btn sm primary" data-act="add" data-id="${b.id}">+ Add</button></div>`).join('') || '<div class="empty">Everything here is already on the Slither.</div>'}</div>
     </div>`;
   $('#planName').oninput = e => { S.plan.name = e.target.value; save(); refreshPlanLinks(); };
   $('#planStart').onchange = e => { S.plan.start = e.target.value || '20:00'; save(); render(); };
@@ -859,7 +865,7 @@ function renderDeals(){
   el.innerHTML = `<div class="hero"><h2>Slither Deals</h2><p class="muted">Bars put something on the table to pull your crew their way. Show the deal on your phone at the bar.</p></div>
     <div class="chips">${['All', ...DEAL_CATS].map(c => `<button class="chip${f === c ? ' on' : ''}" data-deal-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div class="list">${deals.map(d => { const b = byId[d.bar]; const inPlan = S.plan.ids.includes(d.bar); return `<div class="card">
-        <div class="row nowrap"><div class="grow"><div class="eyebrow">${esc(b.name)} · ${esc(b.area)}</div><h3>${esc(d.title)}</h3></div>${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div>
+        <div class="row nowrap"><div class="grow"><div class="eyebrow">${esc(b.name)}${b.star ? ' ★' : ''} · ${esc(b.area)}</div><h3>${esc(d.title)}</h3></div>${d.example ? '<span class="badge ex">Example</span>' : '<span class="badge live">Live</span>'}</div>
         <p class="small">${esc(d.detail)}</p>
         <div class="row"><span class="badge cat">${esc(d.cat)}</span><span class="muted small">${esc(d.when || '')}</span></div>
         <div class="row"><button class="btn sm primary" data-show-deal="${d.id}">Show at the bar</button><button class="btn sm" data-act="${inPlan ? 'remove' : 'add'}" data-id="${d.bar}">${inPlan ? 'On the Slither ✓' : '+ Add bar to Slither'}</button>${d.custom ? `<button class="btn sm ghost" data-del-deal="${d.id}">Delete</button>` : ''}</div>
