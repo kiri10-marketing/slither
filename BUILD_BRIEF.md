@@ -55,6 +55,20 @@ Build order and dependencies are at the bottom. Start there.
 - Landing for a non-venue placement = "Suggested Slithers" with tonight's deals.
 - Reuses scan events from #1. Dashboard view: scans by placement by day.
 
+### 13. "Left Queenstown?" hometown request — S — Now
+- On app open, compare device location (coarse, with permission; fall back to timezone + locale if denied) against the active city's `bbox`. Outside it for 24h+ = "left" state.
+- Show a one-time card: **"Left Queenstown? Request Slither in your hometown."** One tap sends `city_name` (autocompleted from reverse geocode), `country`, `locale`, `user_id?`, `snakes_locked`. No form, no typing.
+- Store in a `city_requests` table. Count per city = the roadmap for step 8 (City-as-config) and the investor story: a map of where tourists carried Slither.
+- Confirmation copy: "You're #N asking for Slither in Melbourne. We'll message you when it lands." Capture email/phone only after the tap, optional.
+- Never show while inside the bbox; never show more than once per city per user.
+
+### 14. Night carousel builder — M — Next
+- From a locked snake: pick 3–10 photos from the night (camera roll or the ones added at stops). Output is a square carousel (1080×1080) for Instagram, plus a 9:16 variant for stories.
+- Each slide gets the Slither snake mascot in the bottom-right corner, a different pose per slide, cycling through a pose set (e.g. peeking, waving, holding a drink, asleep, sunglasses, pointing left to "swipe", curled in a loop). Pose chosen by slide index so the crew sees a different snake on every swipe; last slide = the full snake route drawn on the map (reuses #5's card).
+- Mascot = SVG sprite set in the repo, 8 poses minimum, one accent colour, drawn client-side onto a canvas so it works offline. Render server-side only for the shareable link.
+- Slide 1 overlay: snake name + date + "Slithered in Queenstown". Every other slide: stop name + time reached, bottom-left, small.
+- Share targets as #5. Each export logs a `carousel_exported` event; the carousel is the overseas awareness unit, so count it.
+
 ### 8. Seasonal mode flip — S — Later
 - Season calendar on the city record. Suggested Slithers, featured deals and home copy switch on a date.
 - Winter: après, early starts, ski-town pubs. Summer: lakefront, late sun, longer snakes.
@@ -95,10 +109,12 @@ Build order and dependencies are at the bottom. Start there.
 2. Passport: distinct-bar count, geofence, progress ring, 10/10 voucher
 3. Owner dashboard behind Claim your bar: magic-link login, nightly roll-up
 4. Night recap share card + public link
-5. Translated UI strings (6 languages)
-6. Arrival QR placements with per-placement tracking
-7. Quiet-hour deals + review intercept
-8. City-as-config refactor (before city 2)
-9. Seasonal flip
+5. "Left Queenstown?" hometown request + `city_requests` table
+6. Translated UI strings (6 languages)
+7. Night carousel builder with snake mascot poses (needs the mascot SVG set first)
+8. Arrival QR placements with per-placement tracking
+9. Quiet-hour deals + review intercept
+10. City-as-config refactor (before city 2; `city_requests` tells you which city)
+11. Seasonal flip
 
-**Dependencies:** 2, 3, 4 and 6 all read the scan-event table from step 1. Every venue, deal and placement carries `city_id` from the start so step 8 is a refactor, not a rewrite.
+**Dependencies:** 2, 3, 4 and 8 all read the scan-event table from step 1. Step 7 reuses step 4's map card as its last slide. Step 5 needs the city `bbox`, so add that column in step 1 even before the full cities table exists. Every venue, deal and placement carries `city_id` from the start so step 10 is a refactor, not a rewrite.
